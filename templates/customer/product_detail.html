@@ -1,0 +1,29 @@
+<h4>Variants</h4>
+
+{% if product.variants.all %}
+<table border="1" cellpadding="6">
+    <tr>
+        <th>Size</th>
+        <th>Color</th>
+        <th>Stock</th>
+        <th>Action</th>
+    </tr>
+
+    {% for v in product.variants.all %}
+    <tr>
+        <td>{{ v.size }}</td>
+        <td>{{ v.color }}</td>
+        <td>{{ v.stock }}</td>
+        <td>
+            {% if v.stock > 0 %}
+                <a href="/cart/add/{{ v.id }}/">Add to Cart</a>
+            {% else %}
+                Out of stock
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No variants available.</p>
+{% endif %}

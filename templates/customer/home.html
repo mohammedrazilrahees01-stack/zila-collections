@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Latest Products</h2>
+
+<ul>
+{% for product in products %}
+    <li>
+        <a href="/products/product/{{ product.slug }}/">
+            {{ product.name }} - ₹{{ product.price }}
+        </a>
+    </li>
+{% empty %}
+    <li>No products yet.</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

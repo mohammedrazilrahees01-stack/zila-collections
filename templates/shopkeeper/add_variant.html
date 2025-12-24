@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Add Variant for {{ product.name }}</h2>
+<form method="post">{% csrf_token %}
+{{ form.as_p }}
+<button type="submit">Add Variant</button>
+</form>
+
+<p>
+<a href="/products/shopkeeper/product/{{ product.id }}/image/">
+Add Images →
+</a>
+</p>
+{% endblock %}

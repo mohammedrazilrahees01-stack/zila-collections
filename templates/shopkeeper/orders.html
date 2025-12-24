@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>All Orders (Shopkeeper)</h2>
+
+{% if orders %}
+    {% for order in orders %}
+        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+            <p><strong>Order ID:</strong> {{ order.id }}</p>
+            <p><strong>Customer:</strong> {{ order.full_name }}</p>
+            <p><strong>Phone:</strong> {{ order.phone }}</p>
+            <p><strong>Address:</strong> {{ order.address }}</p>
+            <p><strong>Status:</strong> {{ order.status }}</p>
+            <p><strong>Payment:</strong> {{ order.payment_status }} ({{ order.payment_method }})</p>
+
+            <form method="post" action="/shopkeeper/orders/update/{{ order.id }}/">
+                {% csrf_token %}
+                <label>Update Status:</label>
+                <select name="status">
+                    <option value="pending">pending</option>
+                    <option value="packed">packed</option>
+                    <option value="shipped">shipped</option>
+                    <option value="delivered">delivered</option>
+                    <option value="cancelled">cancelled</option>
+                </select>
+                <button type="submit">Update</button>
+            </form>
+
+            <hr>
+            <p><strong>Items:</strong></p>
+            <ul>
+                {% for item in order.items.all %}
+                    <li>
+                        {{ item.variant.product.name }}
+                        ({{ item.variant.size }} / {{ item.variant.color }})
+                        — Qty: {{ item.quantity }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No orders yet.</p>
+{% endif %}
+
+{% endblock %}
