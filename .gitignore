@@ -14,3 +14,9 @@ media/
 # OS
 .DS_Store
 Thumbs.db
+
+venv/
+__pycache__/
+db.sqlite3
+.env
+media/
