@@ -25,7 +25,10 @@ urlpatterns = [
     # ✅ CART (FIX)
     path('cart/', include('apps.cart.urls')),
     path('orders/', include('apps.orders.urls')),
-path('shopkeeper/orders/', include('apps.orders.shopkeeper_urls')),
+    path('shopkeeper/orders/', include('apps.orders.shopkeeper_urls')),
+    path('wishlist/', include('apps.wishlist.urls')),
+    path('shopkeeper/analytics/', include('apps.orders.analytics_urls')),
+    path('orders/', include('apps.orders.invoice_urls')),
 
 ]
 

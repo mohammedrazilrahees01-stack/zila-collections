@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from apps.products.models import ProductVariant
+
 
 @login_required
 def cart_detail(request):
@@ -11,8 +12,7 @@ def cart_detail(request):
 @login_required
 def add_to_cart(request, variant_id):
     cart = request.session.get('cart', {})
-
-    variant = ProductVariant.objects.get(id=variant_id)
+    variant = get_object_or_404(ProductVariant, id=variant_id)
     vid = str(variant_id)
 
     if vid in cart:
@@ -28,20 +28,38 @@ def add_to_cart(request, variant_id):
 
     request.session['cart'] = cart
     request.session.modified = True
+
+    # Buy Now shortcut
+    if request.GET.get('buy') == '1':
+        return redirect('/orders/checkout/')
+
     return redirect('cart_detail')
 
 
 @login_required
-def update_cart(request, variant_id):
+def increase_quantity(request, variant_id):
     cart = request.session.get('cart', {})
     vid = str(variant_id)
 
     if vid in cart:
-        qty = int(request.POST.get('quantity', 1))
-        variant = ProductVariant.objects.get(id=variant_id)
+        variant = get_object_or_404(ProductVariant, id=variant_id)
+        if cart[vid]['quantity'] < variant.stock:
+            cart[vid]['quantity'] += 1
 
-        if qty <= variant.stock:
-            cart[vid]['quantity'] = qty
+    request.session['cart'] = cart
+    request.session.modified = True
+    return redirect('cart_detail')
+
+
+@login_required
+def decrease_quantity(request, variant_id):
+    cart = request.session.get('cart', {})
+    vid = str(variant_id)
+
+    if vid in cart:
+        cart[vid]['quantity'] -= 1
+        if cart[vid]['quantity'] <= 0:
+            del cart[vid]
 
     request.session['cart'] = cart
     request.session.modified = True

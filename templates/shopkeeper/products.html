@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Products (Shopkeeper)</h2>
+
+<table border="1" cellpadding="6" width="100%">
+    <tr>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for product in products %}
+    <tr>
+        <td>{{ product.name }}</td>
+        <td>₹{{ product.price }}</td>
+        <td>
+            {% if product.variants.all %}
+                {% with low=False out=False %}
+                    {% for v in product.variants.all %}
+                        {% if v.stock == 0 %}{% with out=True %}{% endwith %}{% endif %}
+                        {% if v.stock <= 5 %}{% with low=True %}{% endwith %}{% endif %}
+                    {% endfor %}
+                    {% if out %}
+                        <span style="color:red;">Out of stock</span>
+                    {% elif low %}
+                        <span style="color:orange;">Low stock</span>
+                    {% else %}
+                        <span style="color:green;">In stock</span>
+                    {% endif %}
+                {% endwith %}
+            {% else %}
+                —
+            {% endif %}
+        </td>
+        <td>
+            <a href="/products/shopkeeper/product/{{ product.id }}/variant/">Manage Variants</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

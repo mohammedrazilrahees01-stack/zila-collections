@@ -1,13 +1,158 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>My Orders</h2>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Orders | Zila Collections</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
 
-{% for order in orders %}
-<p>
-Order #{{ order.id }} | {{ order.status }}
-{% if order.status == "pending" or order.status == "packed" %}
-<a href="/orders/cancel/{{ order.id }}/">Cancel</a>
-{% endif %}
-</p>
-{% endfor %}
-{% endblock %}
+        header {
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            font-size: 24px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 20px;
+        }
+
+        .order {
+            border: 1px solid #ddd;
+            margin-bottom: 25px;
+            padding: 15px;
+        }
+
+        .order h3 {
+            margin: 0 0 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        table th {
+            background: #f0f0f0;
+        }
+
+        .totals {
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .totals p {
+            margin: 4px 0;
+        }
+
+        .actions {
+            margin-top: 15px;
+        }
+
+        .actions a, .actions button {
+            display: inline-block;
+            padding: 8px 12px;
+            margin-right: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            background: #000;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .actions button {
+            background: #c0392b;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    Zila Collections — My Orders
+</header>
+
+<div class="container">
+
+    {% if orders %}
+        {% for order in orders %}
+            <div class="order">
+
+                <h3>Order #{{ order.id }}</h3>
+
+                <p><strong>Date:</strong> {{ order.created_at|date:"d M Y" }}</p>
+                <p><strong>Status:</strong>
+                    <span class="status">{{ order.status|capfirst }}</span>
+                </p>
+                <p><strong>Payment:</strong> {{ order.payment_method }} — {{ order.payment_status }}</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Variant</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.variant.product.name }}</td>
+                                <td>{{ item.variant.size }} / {{ item.variant.color }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>₹{{ item.price }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    <p><strong>Original Total:</strong> ₹{{ order.original_total|floatformat:2 }}</p>
+                    <p><strong>Discount:</strong> - ₹{{ order.discount_amount|floatformat:2 }}</p>
+                    <p><strong>Final Total:</strong> ₹{{ order.final_total|floatformat:2 }}</p>
+                </div>
+
+                <div class="actions">
+                    <a href="{% url 'download_invoice' order.id %}">
+                        Download Invoice (PDF)
+                    </a>
+
+                    {% if order.status == 'pending' or order.status == 'packed' %}
+                        <form method="post" action="{% url 'cancel_order' order.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit">Cancel Order</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No orders found.</p>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

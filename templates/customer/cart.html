@@ -4,29 +4,45 @@
 <h2>Your Cart</h2>
 
 {% if cart %}
-    <table border="1" cellpadding="8">
-        <tr>
-            <th>Product</th>
-            <th>Variant</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Action</th>
-        </tr>
+<table border="1" cellpadding="8" width="100%">
+    <tr>
+        <th>Product</th>
+        <th>Variant</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Total</th>
+        <th>Action</th>
+    </tr>
 
-        {% for key, item in cart.items %}
-        <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.variant }}</td>
-            <td>₹{{ item.price }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>
-                <a href="/cart/remove/{{ key }}/">Remove</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    {% for key, item in cart.items %}
+    <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.variant }}</td>
+        <td>₹{{ item.price }}</td>
+
+        <td>
+            <a href="/cart/decrease/{{ key }}/">−</a>
+            {{ item.quantity }}
+            <a href="/cart/increase/{{ key }}/">+</a>
+        </td>
+
+        <td>₹{{ item.price|floatformat:2 }}</td>
+
+        <td>
+            <a href="/cart/remove/{{ key }}/">Remove</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+
+<a href="/orders/checkout/">
+    <button>Proceed to Checkout</button>
+</a>
+
 {% else %}
-    <p>Your cart is empty.</p>
+<p>Your cart is empty.</p>
 {% endif %}
 
 {% endblock %}

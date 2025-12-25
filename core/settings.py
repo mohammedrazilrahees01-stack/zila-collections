@@ -17,10 +17,10 @@ INSTALLED_APPS = [
 
     'apps.accounts',
     'apps.shopkeeper',
-    'apps.products', 
+    'apps.products',
     'apps.cart',
-    'apps.orders',
-    # 'apps.wishlist',
+    'apps.orders.apps.OrdersConfig',   # ✅ ONLY THIS
+    'apps.wishlist',
 ]
 
 
@@ -82,3 +82,23 @@ LOGIN_URL = '/login/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'no-reply@zilacollections.com'
 
+
+LOW_STOCK_THRESHOLD = 5
+
+
+# email
+
+# -----------------------------
+# EMAIL CONFIGURATION (GMAIL)
+# -----------------------------
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'zilacollections3@gmail.com'
+EMAIL_HOST_PASSWORD = 'P@ssw0rd123Zila@'
+
+DEFAULT_FROM_EMAIL = 'Zila Collections <zilacollections3@gmail.com>'

@@ -1,29 +1,125 @@
-<h4>Variants</h4>
+{% extends "base.html" %}
+{% load static %}
 
-{% if product.variants.all %}
-<table border="1" cellpadding="6">
-    <tr>
-        <th>Size</th>
-        <th>Color</th>
-        <th>Stock</th>
-        <th>Action</th>
-    </tr>
+{% block content %}
 
-    {% for v in product.variants.all %}
-    <tr>
-        <td>{{ v.size }}</td>
-        <td>{{ v.color }}</td>
-        <td>{{ v.stock }}</td>
-        <td>
-            {% if v.stock > 0 %}
-                <a href="/cart/add/{{ v.id }}/">Add to Cart</a>
-            {% else %}
-                Out of stock
-            {% endif %}
-        </td>
-    </tr>
+<div style="max-width:900px;margin:auto;padding:20px;">
+
+    <!-- PRODUCT INFO -->
+    <h2>{{ product.name }}</h2>
+
+    <p>{{ product.description }}</p>
+
+    <p>
+        <strong>Price:</strong> ₹{{ product.price }}
+    </p>
+
+    <hr>
+
+    <!-- ========================= -->
+    <!-- VARIANT + ADD TO CART -->
+    <!-- ========================= -->
+
+    {% if product.variants.exists %}
+
+    <form method="post" action="/cart/add/0/" id="cartForm">
+        {% csrf_token %}
+
+        <!-- VARIANT SELECT -->
+        <label><strong>Select Variant</strong></label><br>
+
+        <select id="variantSelect" required style="padding:8px;width:100%;margin:10px 0;">
+            <option value="">-- Choose Variant --</option>
+            {% for variant in product.variants.all %}
+                {% if variant.stock > 0 %}
+                    <option value="{{ variant.id }}">
+                        {{ variant.size }} / {{ variant.color }} (Stock: {{ variant.stock }})
+                    </option>
+                {% else %}
+                    <option disabled>
+                        {{ variant.size }} / {{ variant.color }} (Out of stock)
+                    </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <!-- QUANTITY -->
+        <label><strong>Quantity</strong></label><br>
+        <input
+            type="number"
+            name="quantity"
+            value="1"
+            min="1"
+            style="padding:8px;width:100px;"
+            required
+        >
+
+        <br><br>
+
+        <!-- BUTTONS -->
+        <button type="submit" style="padding:10px 20px;">
+            Add to Cart
+        </button>
+
+        <a href="/orders/checkout/" style="padding:10px 20px;border:1px solid #000;text-decoration:none;">
+            Buy Now
+        </a>
+
+    </form>
+
+    {% else %}
+        <p style="color:red;">This product is currently unavailable.</p>
+    {% endif %}
+
+    <hr>
+
+    <!-- ========================= -->
+    <!-- REVIEWS SECTION -->
+    <!-- ========================= -->
+
+    <h3>Reviews</h3>
+
+    {% for review in product.reviews.all %}
+        <div style="border-bottom:1px solid #ddd;padding:10px 0;">
+            <strong>{{ review.user.email }}</strong><br>
+            Rating:
+            {% for i in "12345"|slice:":review.rating" %}
+                ⭐
+            {% endfor %}
+            <br>
+            {{ review.comment }}<br>
+            <small>{{ review.created_at|date:"d M Y" }}</small>
+        </div>
+    {% empty %}
+        <p>No reviews yet.</p>
     {% endfor %}
-</table>
-{% else %}
-<p>No variants available.</p>
-{% endif %}
+
+    <br>
+
+    {% if user.is_authenticated %}
+        <a href="/products/product/{{ product.id }}/review/">
+            Write a review
+        </a>
+    {% else %}
+        <p><a href="/login/">Login</a> to write a review.</p>
+    {% endif %}
+
+</div>
+
+<!-- ========================= -->
+<!-- CART SCRIPT (DO NOT EDIT) -->
+<!-- ========================= -->
+
+<script>
+document.getElementById("cartForm")?.addEventListener("submit", function(e) {
+    const variantId = document.getElementById("variantSelect").value;
+    if (!variantId) {
+        e.preventDefault();
+        alert("Please select a variant");
+        return;
+    }
+    this.action = "/cart/add/" + variantId + "/";
+});
+</script>
+
+{% endblock %}

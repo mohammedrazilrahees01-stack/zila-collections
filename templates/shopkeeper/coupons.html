@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Coupons</h2>
+
+<form method="post">{% csrf_token %}
+<input name="code" placeholder="CODE">
+<input name="discount" placeholder="Discount %" type="number">
+<button type="submit">Add</button>
+</form>
+
+<ul>
+{% for c in coupons %}
+<li>{{ c.code }} - {{ c.discount_percent }}%</li>
+{% endfor %}
+</ul>
+{% endblock %}

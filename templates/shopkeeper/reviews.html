@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Product Reviews (Shopkeeper)</h2>
+
+<table border="1" cellpadding="6" width="100%">
+    <tr>
+        <th>Product</th>
+        <th>User</th>
+        <th>Rating</th>
+        <th>Comment</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for r in reviews %}
+    <tr>
+        <td>{{ r.product.name }}</td>
+        <td>{{ r.user.username }}</td>
+        <td>{{ r.rating }}/5</td>
+        <td>{{ r.comment }}</td>
+        <td>{% if r.is_active %}Visible{% else %}Hidden{% endif %}</td>
+        <td>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="review_id" value="{{ r.id }}">
+                <button type="submit">
+                    {% if r.is_active %}Hide{% else %}Show{% endif %}
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

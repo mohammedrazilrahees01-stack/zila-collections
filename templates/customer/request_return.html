@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Request Return — Order #{{ order.id }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <label>Reason</label><br>
+  <textarea name="reason" required></textarea><br><br>
+  <button type="submit">Submit Return</button>
+</form>
+
+{% endblock %}
