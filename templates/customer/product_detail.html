@@ -1,125 +1,50 @@
-{% extends "base.html" %}
-{% load static %}
+<h2>{{ product.name }}</h2>
 
-{% block content %}
+<p>{{ product.description }}</p>
+<p><strong>Price:</strong> ₹{{ product.price }}</p>
 
-<div style="max-width:900px;margin:auto;padding:20px;">
+{% if product.variants.exists %}
+<form method="post" action="{% url 'cart:add_to_cart_post' %}">
+    {% csrf_token %}
 
-    <!-- PRODUCT INFO -->
-    <h2>{{ product.name }}</h2>
+    <label><strong>Select Variant:</strong></label><br>
+    <select name="variant_id" required>
+        {% for variant in product.variants.all %}
+            {% if variant.stock > 0 %}
+                <option value="{{ variant.id }}">
+                    {{ variant.size }} / {{ variant.color }}
+                    (Stock: {{ variant.stock }})
+                </option>
+            {% endif %}
+        {% endfor %}
+    </select>
 
-    <p>{{ product.description }}</p>
+    <br><br>
 
-    <p>
-        <strong>Price:</strong> ₹{{ product.price }}
-    </p>
+    <label><strong>Quantity:</strong></label><br>
+    <input type="number" name="quantity" value="1" min="1">
 
-    <hr>
+    <br><br>
 
-    <!-- ========================= -->
-    <!-- VARIANT + ADD TO CART -->
-    <!-- ========================= -->
+    <!-- ADD TO CART -->
+    <button type="submit">
+        Add to Cart
+    </button>
+</form>
 
-    {% if product.variants.exists %}
+<br>
 
-    <form method="post" action="/cart/add/0/" id="cartForm">
-        {% csrf_token %}
+<!-- BUY NOW -->
+<form method="post" action="{% url 'cart:buy_now' %}">
+    {% csrf_token %}
+    <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
+    <input type="hidden" name="quantity" value="1">
 
-        <!-- VARIANT SELECT -->
-        <label><strong>Select Variant</strong></label><br>
+    <button type="submit">
+        Buy Now
+    </button>
+</form>
 
-        <select id="variantSelect" required style="padding:8px;width:100%;margin:10px 0;">
-            <option value="">-- Choose Variant --</option>
-            {% for variant in product.variants.all %}
-                {% if variant.stock > 0 %}
-                    <option value="{{ variant.id }}">
-                        {{ variant.size }} / {{ variant.color }} (Stock: {{ variant.stock }})
-                    </option>
-                {% else %}
-                    <option disabled>
-                        {{ variant.size }} / {{ variant.color }} (Out of stock)
-                    </option>
-                {% endif %}
-            {% endfor %}
-        </select>
-
-        <!-- QUANTITY -->
-        <label><strong>Quantity</strong></label><br>
-        <input
-            type="number"
-            name="quantity"
-            value="1"
-            min="1"
-            style="padding:8px;width:100px;"
-            required
-        >
-
-        <br><br>
-
-        <!-- BUTTONS -->
-        <button type="submit" style="padding:10px 20px;">
-            Add to Cart
-        </button>
-
-        <a href="/orders/checkout/" style="padding:10px 20px;border:1px solid #000;text-decoration:none;">
-            Buy Now
-        </a>
-
-    </form>
-
-    {% else %}
-        <p style="color:red;">This product is currently unavailable.</p>
-    {% endif %}
-
-    <hr>
-
-    <!-- ========================= -->
-    <!-- REVIEWS SECTION -->
-    <!-- ========================= -->
-
-    <h3>Reviews</h3>
-
-    {% for review in product.reviews.all %}
-        <div style="border-bottom:1px solid #ddd;padding:10px 0;">
-            <strong>{{ review.user.email }}</strong><br>
-            Rating:
-            {% for i in "12345"|slice:":review.rating" %}
-                ⭐
-            {% endfor %}
-            <br>
-            {{ review.comment }}<br>
-            <small>{{ review.created_at|date:"d M Y" }}</small>
-        </div>
-    {% empty %}
-        <p>No reviews yet.</p>
-    {% endfor %}
-
-    <br>
-
-    {% if user.is_authenticated %}
-        <a href="/products/product/{{ product.id }}/review/">
-            Write a review
-        </a>
-    {% else %}
-        <p><a href="/login/">Login</a> to write a review.</p>
-    {% endif %}
-
-</div>
-
-<!-- ========================= -->
-<!-- CART SCRIPT (DO NOT EDIT) -->
-<!-- ========================= -->
-
-<script>
-document.getElementById("cartForm")?.addEventListener("submit", function(e) {
-    const variantId = document.getElementById("variantSelect").value;
-    if (!variantId) {
-        e.preventDefault();
-        alert("Please select a variant");
-        return;
-    }
-    this.action = "/cart/add/" + variantId + "/";
-});
-</script>
-
-{% endblock %}
+{% else %}
+<p>No variants available.</p>
+{% endif %}

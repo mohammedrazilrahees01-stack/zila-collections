@@ -1,22 +1,32 @@
 from django.urls import path
 from .views import (
     home_view,
-    register_view,
     login_view,
     logout_view,
+    register_view,
+    customer_home,
     profile_view,
-    verify_email,
-    add_address,
-    delete_address,
+    shopkeeper_dashboard,
+    shopkeeper_login,
+    shopkeeper_logout,
 )
 
 urlpatterns = [
     path('', home_view, name='home'),
-    path('register/', register_view, name='customer_register'),
+
+    # Customer auth
     path('login/', login_view, name='customer_login'),
-    path('logout/', logout_view, name='customer_logout'),
-    path('profile/', profile_view, name='customer_profile'),
-    path('address/add/', add_address, name='add_address'),
-    path('address/delete/<int:address_id>/', delete_address, name='delete_address'),
-    path('verify-email/<str:token>/', verify_email),
+    path('register/', register_view, name='customer_register'),
+    path('logout/', logout_view, name='logout'),
+
+    # Customer pages
+    path('customer/home/', customer_home, name='customer_home'),
+    path('customer/profile/', profile_view, name='customer_profile'),
+
+    # Shopkeeper auth
+    path('shopkeeper/login/', shopkeeper_login, name='shopkeeper_login'),
+    path('shopkeeper/logout/', shopkeeper_logout, name='shopkeeper_logout'),
+
+    # Shopkeeper dashboard
+    path('shopkeeper/dashboard/', shopkeeper_dashboard, name='shopkeeper_dashboard'),
 ]

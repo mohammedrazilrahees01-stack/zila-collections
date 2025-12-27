@@ -1,61 +1,59 @@
-{% extends "base.html" %}
-{% block content %}
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Products</title>
+</head>
+<body>
 
 <h2>Products</h2>
 
-<form method="get" style="margin-bottom:20px;">
-
-    <!-- 🔍 Search -->
-    <input type="text" name="q" placeholder="Search products"
-           value="{{ request.GET.q }}">
-
-    <!-- 🗂 Category -->
+<form method="get">
+    <input type="text" name="search" placeholder="Search" value="{{ search }}">
     <select name="category">
-        <option value="">All Categories</option>
+        <option value="all">All Categories</option>
         {% for cat in categories %}
-            <option value="{{ cat.slug }}"
-                {% if request.GET.category == cat.slug %}selected{% endif %}>
+            <option value="{{ cat.id }}"
+                {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
                 {{ cat.name }}
             </option>
         {% endfor %}
     </select>
-
-    <!-- 💰 Price -->
-    <input type="number" name="min_price" placeholder="Min Price"
-           value="{{ request.GET.min_price }}">
-    <input type="number" name="max_price" placeholder="Max Price"
-           value="{{ request.GET.max_price }}">
-
-    <!-- ↕ Sort -->
+    <input type="number" name="max_price" placeholder="Max Price" value="{{ max_price }}">
     <select name="sort">
         <option value="">Sort</option>
-        <option value="price_low"
-            {% if request.GET.sort == "price_low" %}selected{% endif %}>
-            Price: Low → High
-        </option>
-        <option value="price_high"
-            {% if request.GET.sort == "price_high" %}selected{% endif %}>
-            Price: High → Low
-        </option>
+        <option value="price_low">Price Low</option>
+        <option value="price_high">Price High</option>
+        <option value="newest">Newest</option>
     </select>
-
     <button type="submit">Apply</button>
 </form>
 
 <hr>
 
 {% if products %}
-    <ul>
-        {% for product in products %}
-        <li style="margin-bottom:15px;">
-            <strong>{{ product.name }}</strong><br>
-            ₹{{ product.price }}<br>
-            <a href="/products/product/{{ product.slug }}/">View Product</a>
-        </li>
-        {% endfor %}
-    </ul>
+    {% for product in products %}
+        <div style="border:1px solid #ccc;padding:15px;margin-bottom:20px;">
+            <h3>{{ product.name }}</h3>
+
+            {% if product.images.first %}
+                <img src="{{ product.images.first.image.url }}"
+                     width="200">
+            {% else %}
+                <p>No image</p>
+            {% endif %}
+
+            <p>₹{{ product.price }}</p>
+
+            <a href="{% url 'product_detail' product.slug %}">
+                View Product
+            </a>
+        </div>
+    {% endfor %}
 {% else %}
     <p>No products found.</p>
 {% endif %}
 
-{% endblock %}
+</body>
+</html>

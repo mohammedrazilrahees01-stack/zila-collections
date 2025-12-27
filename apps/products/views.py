@@ -23,38 +23,54 @@ from .forms import ReviewForm
 # --------------------
 # CUSTOMER VIEWS
 # --------------------
+from django.shortcuts import render
+from .models import Product, Category
+
 
 def product_list(request):
-    products = Product.objects.filter(is_active=True)
+    products = Product.objects.all()
     categories = Category.objects.all()
 
-    q = request.GET.get('q')
-    category = request.GET.get('category')
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    sort = request.GET.get('sort')
+    search = request.GET.get('search', '').strip()
+    category = request.GET.get('category', '').strip()
+    max_price = request.GET.get('max_price', '').strip()
+    sort = request.GET.get('sort', '').strip()
 
-    if q:
-        products = products.filter(Q(name__icontains=q))
+    # -----------------------------
+    # SEARCH (SAFE, PARTIAL, CASELESS)
+    # -----------------------------
+    if search:
+        products = products.filter(name__icontains=search)
 
-    if category:
-        products = products.filter(category__slug=category)
+    # -----------------------------
+    # CATEGORY FILTER
+    # -----------------------------
+    if category and category != 'all':
+        products = products.filter(category__id=category)
 
-    if min_price:
-        products = products.filter(price__gte=min_price)
-    if max_price:
-        products = products.filter(price__lte=max_price)
+    # -----------------------------
+    # MAX PRICE FILTER
+    # -----------------------------
+    if max_price.isdigit():
+        products = products.filter(price__lte=int(max_price))
 
+    # -----------------------------
+    # SORTING
+    # -----------------------------
     if sort == 'price_low':
         products = products.order_by('price')
     elif sort == 'price_high':
         products = products.order_by('-price')
-    else:
+    elif sort == 'newest':
         products = products.order_by('-created_at')
 
     return render(request, 'customer/product_list.html', {
         'products': products,
         'categories': categories,
+        'selected_category': category,
+        'search': search,
+        'max_price': max_price,
+        'sort': sort,
     })
 
 

@@ -8,26 +8,62 @@ from .forms import CustomerProfileForm, AddressForm
 from apps.products.models import Product
 
 
-# -------------------------
-# HOME
-# -------------------------
-
+# =========================
+# HOME ENTRY POINT
+# =========================
 def home_view(request):
-    return redirect('product_list')
+    if request.user.is_authenticated:
+        if request.user.email == 'zila@admin.com':
+            return redirect('shopkeeper_dashboard')
+        return redirect('customer_home')
+
+    return redirect('customer_login')
 
 
-# -------------------------
-# AUTH
-# -------------------------
-
+# =========================
+# CUSTOMER AUTH
+# =========================
 def register_view(request):
-    # Your existing register logic stays as-is
-    return render(request, 'accounts/register.html')
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if User.objects.filter(username=email).exists():
+            return render(request, 'customer/register.html', {
+                'error': 'Account already exists. Please login.'
+            })
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password
+        )
+
+        login(request, user)
+        return redirect('customer_home')
+
+    return render(request, 'customer/register.html')
 
 
 def login_view(request):
-    # Your existing login logic stays as-is
-    return render(request, 'accounts/login.html')
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user:
+            login(request, user)
+
+            if user.email == 'zila@admin.com':
+                return redirect('shopkeeper_dashboard')
+            return redirect('customer_home')
+
+        return render(request, 'customer/login.html', {
+            'error': 'Invalid email or password'
+        })
+
+    return render(request, 'customer/login.html')
 
 
 def logout_view(request):
@@ -36,13 +72,19 @@ def logout_view(request):
 
 
 def verify_email(request, token):
-    # Your existing email verification logic stays as-is
+    # keep your existing verification logic
     return redirect('customer_login')
 
 
-# -------------------------
-# PROFILE (PHASE 9 INTEGRATED)
-# -------------------------
+# =========================
+# CUSTOMER PAGES
+# =========================
+@login_required
+def customer_home(request):
+    if request.user.email == 'zila@admin.com':
+        return redirect('shopkeeper_dashboard')
+    return render(request, 'customer/home.html')
+
 
 @login_required
 def profile_view(request):
@@ -71,10 +113,9 @@ def profile_view(request):
     })
 
 
-# -------------------------
+# =========================
 # ADDRESS MANAGEMENT
-# -------------------------
-
+# =========================
 @login_required
 def add_address(request):
     form = AddressForm(request.POST or None)
@@ -97,3 +138,39 @@ def delete_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
     address.delete()
     return redirect('customer_profile')
+
+
+# =========================
+# SHOPKEEPER AUTH
+# =========================
+def shopkeeper_login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user and user.email == 'zila@admin.com':
+            login(request, user)
+            return redirect('shopkeeper_dashboard')
+
+        return render(request, 'shopkeeper/login.html', {
+            'error': 'Unauthorized access'
+        })
+
+    return render(request, 'shopkeeper/login.html')
+
+
+def shopkeeper_logout(request):
+    logout(request)
+    return redirect('/shopkeeper/login/')
+
+# =========================
+# SHOPKEEPER DASHBOARD
+# =========================
+@login_required
+def shopkeeper_dashboard(request):
+    if request.user.email != 'zila@admin.com':
+        return redirect('customer_home')
+
+    return render(request, 'shopkeeper/dashboard.html')

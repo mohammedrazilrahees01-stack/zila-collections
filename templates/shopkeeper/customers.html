@@ -1,0 +1,25 @@
+<h2>Customers</h2>
+
+<form method="get">
+    <input type="text" name="q" placeholder="Search name/email"
+           value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+    </tr>
+
+    {% for user in customers %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="2">No customers</td></tr>
+    {% endfor %}
+</table>

@@ -1,66 +1,33 @@
-{% extends "base.html" %}
+<h2>Shopkeeper Orders</h2>
 
-{% block content %}
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Payment</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
 
-<div style="max-width:1100px;margin:auto;padding:20px;">
+    {% for order in orders %}
+    <tr>
+        <td>#{{ order.id }}</td>
+        <td>{{ order.user.email }}</td>
+        <td>₹{{ order.final_total }}</td>
 
-    <h2>Orders (Shopkeeper)</h2>
+        <td>
+            {{ order.payment_method }}<br>
+            <strong>{{ order.payment_status }}</strong>
+        </td>
 
-    {% if orders %}
-    <table border="1" width="100%" cellpadding="10" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Customer</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Update</th>
-            </tr>
-        </thead>
+        <td>{{ order.status }}</td>
 
-        <tbody>
-        {% for order in orders %}
-            <tr>
-                <td>#{{ order.id }}</td>
-
-                <td>{{ order.user.email }}</td>
-
-                <!-- ✅ FINAL PAYABLE AMOUNT -->
-                <td>
-                    ₹{{ order.final_total|floatformat:2 }}
-                    <br>
-                    <small>
-                        Items: {{ order.total_items }} |
-                        Discount: ₹{{ order.discount_amount|floatformat:2 }}
-                    </small>
-                </td>
-
-                <td>{{ order.get_status_display }}</td>
-
-                <td>
-                    <form method="post" action="{% url 'update_order_status' order.id %}">
-                        {% csrf_token %}
-                        <select name="status">
-                            {% for key,label in order.STATUS_CHOICES %}
-                                <option value="{{ key }}"
-                                    {% if order.status == key %}selected{% endif %}
-                                >
-                                    {{ label }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit">Update</button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    {% else %}
-        <p>No orders found.</p>
-    {% endif %}
-
-</div>
-
-{% endblock %}
+        <td>
+            <a href="{% url 'shopkeeper_order_detail' order.id %}">
+                View
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

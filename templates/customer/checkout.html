@@ -1,8 +1,17 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>Checkout</h2>
-<form method="post">{% csrf_token %}
-{{ form.as_p }}
-<button type="submit">Place Order (COD)</button>
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.full_name.label_tag }}<br>
+    {{ form.full_name }}<br><br>
+
+    {{ form.phone.label_tag }}<br>
+    {{ form.phone }}<br><br>
+
+    {{ form.address.label_tag }}<br>
+    {{ form.address }}<br><br>
+
+    <strong>Select Payment Method</strong><br>
+    {{ form.payment_method }}<br><br>
+
+    <button type="submit">Place Order</button>
 </form>
-{% endblock %}

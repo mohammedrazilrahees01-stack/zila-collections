@@ -1,10 +1,7 @@
-{% extends "base.html" %}
-
-{% block content %}
 <h2>Your Cart</h2>
 
-{% if cart %}
-<table border="1" cellpadding="8" width="100%">
+{% if items %}
+<table border="1" cellpadding="8" cellspacing="0">
     <tr>
         <th>Product</th>
         <th>Variant</th>
@@ -14,35 +11,39 @@
         <th>Action</th>
     </tr>
 
-    {% for key, item in cart.items %}
+    {% for item in items %}
     <tr>
-        <td>{{ item.name }}</td>
-        <td>{{ item.variant }}</td>
+        <td>{{ item.product.name }}</td>
+
+        <td>
+            {{ item.variant.size }} /
+            {{ item.variant.color }}
+        </td>
+
         <td>₹{{ item.price }}</td>
 
         <td>
-            <a href="/cart/decrease/{{ key }}/">−</a>
+            <a href="{% url 'cart:decrease_quantity' item.variant.id %}">−</a>
             {{ item.quantity }}
-            <a href="/cart/increase/{{ key }}/">+</a>
+            <a href="{% url 'cart:increase_quantity' item.variant.id %}">+</a>
         </td>
 
-        <td>₹{{ item.price|floatformat:2 }}</td>
+        <td>₹{{ item.total }}</td>
 
         <td>
-            <a href="/cart/remove/{{ key }}/">Remove</a>
+            <a href="{% url 'cart:remove_from_cart' item.variant.id %}">
+                Remove
+            </a>
         </td>
     </tr>
     {% endfor %}
 </table>
 
-<br>
+<h3>Total: ₹{{ total }}</h3>
 
-<a href="/orders/checkout/">
-    <button>Proceed to Checkout</button>
-</a>
+<br>
+<a href="{% url 'checkout' %}">Proceed to Checkout</a>
 
 {% else %}
 <p>Your cart is empty.</p>
 {% endif %}
-
-{% endblock %}

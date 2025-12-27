@@ -1,0 +1,20 @@
+<h2>Order #{{ order.id }}</h2>
+
+<h3>Customer</h3>
+<p>{{ order.user.username }} — {{ order.user.email }}</p>
+
+<h3>Payment</h3>
+<p>Method: {{ order.payment_method }}</p>
+<p>Status: {{ order.payment_status }}</p>
+
+{% if order.payment_screenshot %}
+    <img src="{{ order.payment_screenshot.url }}" width="300">
+{% endif %}
+
+{% if order.payment_status == 'PAYMENT UNDER REVIEW' %}
+<form method="post" action="{% url 'verify_payment' order.id %}">
+    {% csrf_token %}
+    <button name="action" value="approve">Approve</button>
+    <button name="action" value="reject">Reject</button>
+</form>
+{% endif %}

@@ -1,0 +1,41 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online Payment</title>
+</head>
+<body>
+
+<h2>Complete Payment</h2>
+
+<p><strong>Order ID:</strong> #{{ order.id }}</p>
+<p><strong>Amount:</strong> ₹{{ order.final_total }}</p>
+
+<hr>
+
+<h3>Pay via UPI</h3>
+
+<p><strong>UPI ID:</strong> mohammedrazilrahees01@oksbi</p>
+<p><strong>Reference:</strong> ORDER{{ order.id }}</p>
+
+<img src="{% static 'images/upi_qr.png' %}" width="220">
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <label>UPI Reference ID</label><br>
+    <input type="text" name="payment_reference" required><br><br>
+
+    <label>Payment Screenshot</label><br>
+    <input type="file" name="payment_screenshot" required><br><br>
+
+    <button type="submit">Submit Payment</button>
+</form>
+
+<hr>
+
+<a href="{% url 'my_orders' %}">Go to My Orders</a>
+
+</body>
+</html>

@@ -1,69 +1,75 @@
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
-from django.utils.timezone import now, timedelta
+from django.shortcuts import render
+from django.db.models import Sum, Count, F
+from django.contrib.auth.models import User
+from datetime import timedelta
+from django.utils import timezone
 
 from .models import Order, OrderItem
 
 
 @login_required
 def analytics_dashboard(request):
-    today = now().date()
-    last_7_days = today - timedelta(days=7)
-    last_30_days = today - timedelta(days=30)
+    orders = Order.objects.all()
+    paid_orders = orders.filter(payment_status='PAID')
 
-    # -----------------------
-    # BASIC COUNTS
-    # -----------------------
-    total_orders = Order.objects.count()
+    # --------------------
+    # ORDER COUNTS
+    # --------------------
+    total_orders = orders.count()
+    delivered_orders = orders.filter(status='delivered').count()
+    pending_orders = orders.filter(status='pending').count()
+    returned_orders = orders.filter(status='returned').count()
 
-    delivered_orders = Order.objects.filter(status='delivered').count()
-    pending_orders = Order.objects.filter(status__in=['pending', 'packed']).count()
-    returned_orders = Order.objects.filter(status='returned').count()
+    # --------------------
+    # REVENUE (CORRECT)
+    # --------------------
+    total_revenue = OrderItem.objects.filter(
+        order__payment_status='PAID'
+    ).aggregate(
+        revenue=Sum(F('price') * F('quantity'))
+    )['revenue'] or 0
 
-    # -----------------------
-    # REVENUE
-    # -----------------------
-    total_revenue = sum(
-        order.final_total() for order in
-        Order.objects.filter(status='delivered')
-    )
+    last_7_days = timezone.now() - timedelta(days=7)
+    last_30_days = timezone.now() - timedelta(days=30)
 
-    revenue_7_days = sum(
-        order.final_total() for order in
-        Order.objects.filter(created_at__date__gte=last_7_days)
-    )
+    revenue_7_days = OrderItem.objects.filter(
+        order__payment_status='PAID',
+        order__created_at__gte=last_7_days
+    ).aggregate(
+        revenue=Sum(F('price') * F('quantity'))
+    )['revenue'] or 0
 
-    revenue_30_days = sum(
-        order.final_total() for order in
-        Order.objects.filter(created_at__date__gte=last_30_days)
-    )
+    revenue_30_days = OrderItem.objects.filter(
+        order__payment_status='PAID',
+        order__created_at__gte=last_30_days
+    ).aggregate(
+        revenue=Sum(F('price') * F('quantity'))
+    )['revenue'] or 0
 
-    # -----------------------
+    # --------------------
     # TOP PRODUCTS
-    # -----------------------
-    top_products = (
-        OrderItem.objects
-        .values('variant__product__name')
-        .annotate(
-            sold_qty=Sum('quantity'),
-            revenue=Sum('price')
-        )
-        .order_by('-sold_qty')[:5]
-    )
+    # --------------------
+    top_products = OrderItem.objects.filter(
+        order__payment_status='PAID'
+    ).values(
+        'variant__product__name'
+    ).annotate(
+        quantity_sold=Sum('quantity'),
+        revenue=Sum(F('price') * F('quantity'))
+    ).order_by('-revenue')[:5]
 
-    # -----------------------
+    # --------------------
     # TOP CUSTOMERS
-    # -----------------------
-    top_customers = (
-        Order.objects
-        .values('user__username')
-        .annotate(
-            total_spent=Sum('items__price'),
-            orders=Count('id')
-        )
-        .order_by('-total_spent')[:5]
-    )
+    # --------------------
+    top_customers = OrderItem.objects.filter(
+        order__payment_status='PAID'
+    ).values(
+        'order__user__email'
+    ).annotate(
+        orders=Count('order', distinct=True),
+        total_spent=Sum(F('price') * F('quantity'))
+    ).order_by('-total_spent')[:5]
 
     context = {
         'total_orders': total_orders,

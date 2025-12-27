@@ -1,0 +1,13 @@
+<h2>Confirm Payment</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <label>UPI Reference ID</label><br>
+  <input type="text" name="reference" required><br><br>
+
+  <label>Upload Payment Screenshot</label><br>
+  <input type="file" name="screenshot" required><br><br>
+
+  <button type="submit">Submit</button>
+</form>

@@ -1,79 +1,127 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from apps.products.models import ProductVariant
 
 
-@login_required
+# -------------------------
+# CART DETAIL
+# -------------------------
 def cart_detail(request):
     cart = request.session.get('cart', {})
-    return render(request, 'customer/cart.html', {'cart': cart})
+    items = []
+    total = 0
+
+    for variant_id, item in cart.items():
+        variant = get_object_or_404(ProductVariant, id=variant_id)
+        item_total = item['price'] * item['quantity']
+        total += item_total
+
+        items.append({
+            'variant': variant,
+            'product': variant.product,
+            'quantity': item['quantity'],
+            'price': item['price'],
+            'total': item_total,
+        })
+
+    return render(request, 'customer/cart.html', {
+        'items': items,
+        'total': total
+    })
 
 
-@login_required
-def add_to_cart(request, variant_id):
-    cart = request.session.get('cart', {})
+# -------------------------
+# ADD TO CART (POST)
+# -------------------------
+@require_POST
+def add_to_cart_post(request):
+    variant_id = request.POST.get('variant_id')
+    quantity = int(request.POST.get('quantity', 1))
+
     variant = get_object_or_404(ProductVariant, id=variant_id)
-    vid = str(variant_id)
 
-    if vid in cart:
-        if cart[vid]['quantity'] < variant.stock:
-            cart[vid]['quantity'] += 1
+    cart = request.session.get('cart', {})
+
+    if str(variant_id) in cart:
+        cart[str(variant_id)]['quantity'] += quantity
     else:
-        cart[vid] = {
-            'name': variant.product.name,
-            'variant': f"{variant.size}/{variant.color}",
-            'price': float(variant.product.price),
-            'quantity': 1,
+        cart[str(variant_id)] = {
+            'quantity': quantity,
+            'price': float(variant.product.price)
         }
 
     request.session['cart'] = cart
     request.session.modified = True
 
-    # Buy Now shortcut
-    if request.GET.get('buy') == '1':
-        return redirect('/orders/checkout/')
-
-    return redirect('cart_detail')
+    return redirect('cart:cart_detail')
 
 
-@login_required
+# -------------------------
+# ADD TO CART (LINK BASED)
+# -------------------------
+def add_to_cart(request, variant_id):
+    variant = get_object_or_404(ProductVariant, id=variant_id)
+    cart = request.session.get('cart', {})
+
+    if str(variant_id) in cart:
+        cart[str(variant_id)]['quantity'] += 1
+    else:
+        cart[str(variant_id)] = {
+            'quantity': 1,
+            'price': float(variant.product.price)
+        }
+
+    request.session['cart'] = cart
+    request.session.modified = True
+
+    return redirect('cart:cart_detail')
+
+
+# -------------------------
+# BUY NOW (POST → CHECKOUT)
+# -------------------------
+@require_POST
+def buy_now(request):
+    variant_id = request.POST.get('variant_id')
+    quantity = int(request.POST.get('quantity', 1))
+
+    variant = get_object_or_404(ProductVariant, id=variant_id)
+
+    request.session['cart'] = {
+        str(variant_id): {
+            'quantity': quantity,
+            'price': float(variant.product.price)
+        }
+    }
+    request.session.modified = True
+
+    return redirect('checkout')
+
+
+# -------------------------
+# QUANTITY CONTROLS
+# -------------------------
 def increase_quantity(request, variant_id):
     cart = request.session.get('cart', {})
-    vid = str(variant_id)
-
-    if vid in cart:
-        variant = get_object_or_404(ProductVariant, id=variant_id)
-        if cart[vid]['quantity'] < variant.stock:
-            cart[vid]['quantity'] += 1
-
-    request.session['cart'] = cart
-    request.session.modified = True
-    return redirect('cart_detail')
+    if str(variant_id) in cart:
+        cart[str(variant_id)]['quantity'] += 1
+        request.session.modified = True
+    return redirect('cart:cart_detail')
 
 
-@login_required
 def decrease_quantity(request, variant_id):
     cart = request.session.get('cart', {})
-    vid = str(variant_id)
-
-    if vid in cart:
-        cart[vid]['quantity'] -= 1
-        if cart[vid]['quantity'] <= 0:
-            del cart[vid]
-
-    request.session['cart'] = cart
-    request.session.modified = True
-    return redirect('cart_detail')
+    if str(variant_id) in cart:
+        cart[str(variant_id)]['quantity'] -= 1
+        if cart[str(variant_id)]['quantity'] <= 0:
+            del cart[str(variant_id)]
+        request.session.modified = True
+    return redirect('cart:cart_detail')
 
 
-@login_required
 def remove_from_cart(request, variant_id):
     cart = request.session.get('cart', {})
-    vid = str(variant_id)
-
-    if vid in cart:
-        del cart[vid]
-
-    request.session['cart'] = cart
-    request.session.modified = True
-    return redirect('cart_detail')
+    if str(variant_id) in cart:
+        del cart[str(variant_id)]
+        request.session.modified = True
+    return redirect('cart:cart_detail')

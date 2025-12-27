@@ -1,12 +1,7 @@
-{% extends "base.html" %}
-{% block content %}
-
 <h2>Order Placed Successfully</h2>
 
-<p>Order ID: <strong>#{{ order.id }}</strong></p>
-<p>Status: <strong>{{ order.status|title }}</strong></p>
-<p>Payment Method: COD</p>
+<p><strong>Order ID:</strong> #{{ order.id }}</p>
+<p><strong>Status:</strong> {{ order.status }}</p>
+<p><strong>Payment Status:</strong> {{ order.payment_status }}</p>
 
-<a href="/orders/my/">View My Orders</a>
-
-{% endblock %}
+<a href="{% url 'my_orders' %}">View My Orders</a>
