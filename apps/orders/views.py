@@ -1,174 +1,224 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import FileResponse
-from django.db import transaction
-from django.db.models import F
+from django.views.decorators.http import require_POST
 
 from apps.products.models import ProductVariant
-from .models import Order, OrderItem, ReturnRequest
-from .forms import CheckoutForm
-from .utils import generate_invoice_pdf
 
 
-# =========================
-# CHECKOUT (ATOMIC & SAFE)
-# =========================
-@login_required
-@transaction.atomic
-def checkout(request):
+# ======================================================
+# INTERNAL — CART SANITIZER (CRITICAL)
+# ======================================================
+
+def _sanitize_cart(request):
+    """
+    Ensures cart contains only:
+    - active products
+    - active variants
+    - valid stock
+    - latest price
+    """
+    cart = request.session.get('cart', {})
+    updated = False
+
+    for variant_id in list(cart.keys()):
+        try:
+            variant = ProductVariant.objects.select_related('product').get(id=variant_id)
+        except ProductVariant.DoesNotExist:
+            del cart[variant_id]
+            updated = True
+            continue
+
+        # ❌ Product or variant inactive
+        if not variant.is_active or not variant.product.is_active:
+            del cart[variant_id]
+            updated = True
+            continue
+
+        # ❌ Out of stock
+        if variant.stock <= 0:
+            del cart[variant_id]
+            updated = True
+            continue
+
+        # 🔒 Cap quantity to stock
+        if cart[variant_id]['quantity'] > variant.stock:
+            cart[variant_id]['quantity'] = variant.stock
+            updated = True
+
+        # 🔒 Sync latest price
+        latest_price = float(variant.product.price)
+        if cart[variant_id]['price'] != latest_price:
+            cart[variant_id]['price'] = latest_price
+            updated = True
+
+    if updated:
+        request.session['cart'] = cart
+        request.session.modified = True
+
+    return cart
+
+
+# ======================================================
+# CART DETAIL
+# ======================================================
+
+def cart_detail(request):
+    cart = _sanitize_cart(request)
+
+    items = []
+    total = 0
+
+    for variant_id, item in cart.items():
+        variant = get_object_or_404(ProductVariant, id=variant_id)
+        item_total = item['price'] * item['quantity']
+        total += item_total
+
+        items.append({
+            'variant': variant,
+            'product': variant.product,
+            'quantity': item['quantity'],
+            'price': item['price'],
+            'total': item_total,
+        })
+
+    return render(request, 'customer/cart.html', {
+        'items': items,
+        'total': total
+    })
+
+
+# ======================================================
+# ADD TO CART (POST)
+# ======================================================
+
+@require_POST
+def add_to_cart_post(request):
+    variant_id = request.POST.get('variant_id')
+    quantity = int(request.POST.get('quantity', 1))
+
+    variant = get_object_or_404(
+        ProductVariant,
+        id=variant_id,
+        is_active=True,
+        product__is_active=True
+    )
+
+    if variant.stock <= 0:
+        return redirect('product_detail', slug=variant.product.slug)
+
     cart = request.session.get('cart', {})
 
-    if not cart:
-        return redirect('cart:cart_detail')
+    current_qty = cart.get(str(variant_id), {}).get('quantity', 0)
+    new_qty = min(current_qty + quantity, variant.stock)
 
-    form = CheckoutForm(request.POST or None)
+    cart[str(variant_id)] = {
+        'quantity': new_qty,
+        'price': float(variant.product.price)
+    }
 
-    if request.method == 'POST' and form.is_valid():
+    request.session['cart'] = cart
+    request.session.modified = True
 
-        # Prevent double submit
-        if request.session.get('checkout_lock'):
-            return redirect('cart:cart_detail')
-        request.session['checkout_lock'] = True
-
-        payment_method = form.cleaned_data['payment_method']
-
-        order = Order.objects.create(
-            user=request.user,
-            full_name=form.cleaned_data['full_name'],
-            phone=form.cleaned_data['phone'],
-            address=form.cleaned_data['address'],
-            payment_method=payment_method,
-            payment_status='NOT PAID',
-            status='pending'
-        )
-
-        for variant_id, item in cart.items():
-            variant = ProductVariant.objects.select_for_update().get(id=variant_id)
-
-            if variant.stock < item['quantity']:
-                transaction.set_rollback(True)
-                request.session['checkout_lock'] = False
-                return redirect('cart:cart_detail')
-
-            variant.stock = F('stock') - item['quantity']
-            variant.save()
-
-            OrderItem.objects.create(
-                order=order,
-                variant=variant,
-                quantity=item['quantity'],
-                price=item['price']
-            )
-
-        request.session['cart'] = {}
-        request.session.modified = True
-        request.session['checkout_lock'] = False
-
-        if payment_method == 'ONLINE':
-            order.payment_status = 'PAYMENT UNDER REVIEW'
-            order.save()
-            return redirect('online_payment', order_id=order.id)
-
-        return redirect('order_success', order_id=order.id)
-
-    return render(request, 'customer/checkout.html', {'form': form})
+    return redirect('cart:cart_detail')
 
 
-# =========================
-# ONLINE PAYMENT (IDEMPOTENT)
-# =========================
-@login_required
-def online_payment(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+# ======================================================
+# ADD TO CART (LINK)
+# ======================================================
 
-    if order.payment_status in ['PAID', 'PAYMENT UNDER REVIEW']:
-        return redirect('my_orders')
-
-    if request.method == 'POST':
-        order.payment_reference = request.POST.get('payment_reference')
-        order.payment_screenshot = request.FILES.get('payment_screenshot')
-        order.payment_status = 'PAYMENT UNDER REVIEW'
-        order.save()
-        return redirect('my_orders')
-
-    return render(request, 'customer/online_payment.html', {'order': order})
-
-
-# =========================
-# ORDER SUCCESS
-# =========================
-@login_required
-def order_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    return render(request, 'customer/order_success.html', {'order': order})
-
-
-# =========================
-# MY ORDERS
-# =========================
-@login_required
-def my_orders(request):
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'customer/my_orders.html', {'orders': orders})
-
-
-# =========================
-# CANCEL ORDER (SAFE)
-# =========================
-@login_required
-def cancel_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-
-    if order.payment_status == 'PAID':
-        return redirect('my_orders')
-
-    if order.status not in ['pending', 'packed']:
-        return redirect('my_orders')
-
-    order.status = 'cancelled'
-    order.save()
-    return redirect('my_orders')
-
-
-# =========================
-# RETURN ORDER (ONCE ONLY)
-# =========================
-@login_required
-def request_return(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-
-    if order.status != 'delivered':
-        return redirect('my_orders')
-
-    if hasattr(order, 'return_request'):
-        return redirect('my_orders')
-
-    if request.method == 'POST':
-        ReturnRequest.objects.create(
-            order=order,
-            reason=request.POST.get('reason')
-        )
-        order.status = 'returned'
-        order.save()
-        return redirect('my_orders')
-
-    return render(request, 'customer/request_return.html', {'order': order})
-
-
-# =========================
-# INVOICE
-# =========================
-@login_required
-def download_invoice(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-
-    if order.user != request.user and request.user.email != 'zila@admin.com':
-        return redirect('customer_home')
-
-    pdf = generate_invoice_pdf(order)
-
-    return FileResponse(
-        pdf,
-        as_attachment=True,
-        filename=f"invoice_order_{order.id}.pdf"
+def add_to_cart(request, variant_id):
+    variant = get_object_or_404(
+        ProductVariant,
+        id=variant_id,
+        is_active=True,
+        product__is_active=True
     )
+
+    if variant.stock <= 0:
+        return redirect('product_detail', slug=variant.product.slug)
+
+    cart = request.session.get('cart', {})
+
+    current_qty = cart.get(str(variant_id), {}).get('quantity', 0)
+    new_qty = min(current_qty + 1, variant.stock)
+
+    cart[str(variant_id)] = {
+        'quantity': new_qty,
+        'price': float(variant.product.price)
+    }
+
+    request.session['cart'] = cart
+    request.session.modified = True
+
+    return redirect('cart:cart_detail')
+
+
+# ======================================================
+# BUY NOW (SAFE)
+# ======================================================
+
+@require_POST
+def buy_now(request):
+    variant_id = request.POST.get('variant_id')
+    quantity = int(request.POST.get('quantity', 1))
+
+    variant = get_object_or_404(
+        ProductVariant,
+        id=variant_id,
+        is_active=True,
+        product__is_active=True
+    )
+
+    if variant.stock <= 0:
+        return redirect('product_detail', slug=variant.product.slug)
+
+    quantity = min(quantity, variant.stock)
+
+    request.session['cart'] = {
+        str(variant_id): {
+            'quantity': quantity,
+            'price': float(variant.product.price)
+        }
+    }
+
+    request.session.modified = True
+    return redirect('checkout')
+
+
+# ======================================================
+# QUANTITY CONTROLS
+# ======================================================
+
+def increase_quantity(request, variant_id):
+    cart = _sanitize_cart(request)
+
+    if str(variant_id) in cart:
+        variant = get_object_or_404(ProductVariant, id=variant_id)
+        cart[str(variant_id)]['quantity'] = min(
+            cart[str(variant_id)]['quantity'] + 1,
+            variant.stock
+        )
+        request.session.modified = True
+
+    return redirect('cart:cart_detail')
+
+
+def decrease_quantity(request, variant_id):
+    cart = _sanitize_cart(request)
+
+    if str(variant_id) in cart:
+        cart[str(variant_id)]['quantity'] -= 1
+        if cart[str(variant_id)]['quantity'] <= 0:
+            del cart[str(variant_id)]
+        request.session.modified = True
+
+    return redirect('cart:cart_detail')
+
+
+def remove_from_cart(request, variant_id):
+    cart = request.session.get('cart', {})
+
+    if str(variant_id) in cart:
+        del cart[str(variant_id)]
+        request.session.modified = True
+
+    return redirect('cart:cart_detail')

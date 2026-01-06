@@ -8,9 +8,9 @@ from .models import (
 )
 
 
-# --------------------
+# ====================
 # SHOPKEEPER FORMS
-# --------------------
+# ====================
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -34,18 +34,26 @@ class ProductForm(forms.ModelForm):
 class ProductVariantForm(forms.ModelForm):
     class Meta:
         model = ProductVariant
-        fields = ['size', 'color', 'stock']
+        fields = [
+            'size',
+            'color',
+            'stock',
+            'is_active',
+        ]
 
 
 class ProductImageForm(forms.ModelForm):
     class Meta:
         model = ProductImage
-        fields = ['image']
+        fields = [
+            'image',
+            'is_primary',
+        ]
 
 
-# --------------------
-# CUSTOMER REVIEW FORM (PHASE 11)
-# --------------------
+# ====================
+# CUSTOMER REVIEW FORM
+# ====================
 
 class ReviewForm(forms.ModelForm):
     class Meta:

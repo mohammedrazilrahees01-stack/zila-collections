@@ -1,171 +1,145 @@
-{% extends "base.html" %}
 {% load static %}
-
-{% block content %}
-<style>
-    .product-page {
-        max-width: 1100px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-    }
-
-    @media (max-width: 768px) {
-        .product-page {
-            grid-template-columns: 1fr;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ product.name }} | Zila Collections</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
         }
-    }
 
-    .product-image-box {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
 
-    .product-image-box img {
-        max-width: 100%;
-        max-height: 420px;
-        object-fit: contain;
-    }
+        .image-box img {
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
 
-    .product-info h1 {
-        font-size: 26px;
-        margin-bottom: 10px;
-    }
+        h1 {
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
 
-    .product-price {
-        font-size: 24px;
-        font-weight: 700;
-        margin: 15px 0;
-    }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
 
-    .product-desc {
-        color: #4b5563;
-        line-height: 1.6;
-        margin-bottom: 20px;
-    }
+        .desc {
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 20px;
+        }
 
-    .product-form {
-        margin-top: 20px;
-    }
+        select, input, button {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
 
-    .product-form label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
+        button {
+            background: #111;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
 
-    .product-form select,
-    .product-form input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        margin-bottom: 15px;
-    }
+        .buy {
+            background: #f59e0b;
+            color: #111;
+            font-weight: 600;
+        }
 
-    .actions {
-        display: flex;
-        gap: 14px;
-        margin-top: 10px;
-    }
+        .reviews {
+            grid-column: 1 / -1;
+            margin-top: 30px;
+        }
 
-    .btn-cart {
-        flex: 1;
-        padding: 12px;
-        background: #111;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        font-size: 15px;
-        cursor: pointer;
-    }
+        .review {
+            border-top: 1px solid #e5e7eb;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
 
-    .btn-buy {
-        flex: 1;
-        padding: 12px;
-        background: #F5B400;
-        color: #111;
-        border: none;
-        border-radius: 4px;
-        font-size: 15px;
-        cursor: pointer;
-        font-weight: 600;
-    }
+<div class="container">
 
-    .no-variant {
-        color: #dc2626;
-        margin-top: 20px;
-    }
-</style>
-
-<div class="product-page">
-    <!-- IMAGE -->
-    <div class="product-image-box">
+    <div class="image-box">
         {% if product.images.first %}
-            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.images.first.image.url }}">
         {% else %}
-            <span>No image available</span>
+            <img src="{% static 'images/no-image.png' %}">
         {% endif %}
     </div>
 
-    <!-- DETAILS -->
-    <div class="product-info">
+    <div>
         <h1>{{ product.name }}</h1>
+        <div class="price">₹{{ product.price }}</div>
+        <div class="desc">{{ product.description }}</div>
 
-        <div class="product-price">₹{{ product.price }}</div>
-
-        <div class="product-desc">
-            {{ product.description }}
-        </div>
-
-        {% if product.variants.exists %}
-        <!-- ADD TO CART FORM -->
-        <form method="post" action="{% url 'cart:add_to_cart_post' %}" class="product-form">
+        {% if variants %}
+        <form method="post" action="{% url 'cart:add_to_cart_post' %}">
             {% csrf_token %}
 
-            <label>Select Variant</label>
             <select name="variant_id" required>
-                {% for variant in product.variants.all %}
-                    {% if variant.stock > 0 %}
-                        <option value="{{ variant.id }}">
-                            {{ variant.size }} / {{ variant.color }} (Stock: {{ variant.stock }})
-                        </option>
-                    {% endif %}
+                {% for v in variants %}
+                    <option value="{{ v.id }}">
+                        {{ v.size }} / {{ v.color }} (Stock: {{ v.stock }})
+                    </option>
                 {% endfor %}
             </select>
 
-            <label>Quantity</label>
             <input type="number" name="quantity" value="1" min="1">
 
-            <div class="actions">
-                <button type="submit" class="btn-cart">
-                    Add to Cart
-                </button>
-            </div>
+            <button type="submit">Add to Cart</button>
         </form>
 
-        <!-- BUY NOW -->
-        <form method="post" action="{% url 'cart:buy_now' %}" class="product-form">
+        <form method="post" action="{% url 'cart:buy_now' %}">
             {% csrf_token %}
-            <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
+            <input type="hidden" name="variant_id" value="{{ variants.first.id }}">
             <input type="hidden" name="quantity" value="1">
-
-            <button type="submit" class="btn-buy">
-                Buy Now
-            </button>
+            <button type="submit" class="buy">Buy Now</button>
         </form>
-
-        {% else %}
-            <div class="no-variant">
-                No variants available.
-            </div>
         {% endif %}
     </div>
+
+    <div class="reviews">
+        <h3>Reviews</h3>
+
+        {% for r in reviews %}
+            <div class="review">
+                <strong>{{ r.user.username }}</strong> — {{ r.rating }}/5<br>
+                {{ r.comment }}
+            </div>
+        {% empty %}
+            <p>No reviews yet.</p>
+        {% endfor %}
+
+        {% if user_can_review %}
+            <br>
+            <a href="{% url 'add_review' product.id %}">Write a review</a>
+        {% endif %}
+    </div>
+
 </div>
-{% endblock %}
+
+</body>
+</html>

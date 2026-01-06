@@ -27,7 +27,12 @@ def shopkeeper_only(view_func):
 @login_required
 @shopkeeper_only
 def shopkeeper_orders(request):
-    orders = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')
+    orders = (
+        Order.objects
+        .select_related('user')
+        .prefetch_related('items')
+        .order_by('-created_at')
+    )
     return render(request, 'shopkeeper/orders.html', {'orders': orders})
 
 
@@ -42,13 +47,15 @@ def shopkeeper_order_detail(request, order_id):
 
 
 # =====================================================
-# SHOPKEEPER: VERIFY PAYMENT (IDEMPOTENT)
+# SHOPKEEPER: VERIFY PAYMENT (STRICT & IDEMPOTENT)
 # =====================================================
 @login_required
 @shopkeeper_only
+@transaction.atomic
 def verify_payment(request, order_id):
     order = get_object_or_404(Order, id=order_id)
 
+    # Already resolved
     if order.payment_status == 'PAID':
         return redirect('shopkeeper_order_detail', order_id=order.id)
 
@@ -57,7 +64,8 @@ def verify_payment(request, order_id):
 
         if action == 'approve':
             order.payment_status = 'PAID'
-            order.status = 'packed'
+            if order.status == 'pending':
+                order.status = 'packed'
 
         elif action == 'reject':
             order.payment_status = 'NOT PAID'
@@ -69,25 +77,37 @@ def verify_payment(request, order_id):
 
 
 # =====================================================
-# SHOPKEEPER: UPDATE ORDER STATUS
+# SHOPKEEPER: UPDATE ORDER STATUS (STATE MACHINE)
 # =====================================================
 @login_required
 @shopkeeper_only
+@transaction.atomic
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+
+    # Immutable states
+    if order.status in ['cancelled', 'delivered']:
+        return redirect('shopkeeper_order_detail', order_id=order.id)
 
     if request.method == 'POST':
         new_status = request.POST.get('status')
 
-        allowed = [
-            'pending', 'packed', 'shipped',
-            'delivered', 'cancelled', 'returned'
-        ]
+        valid_flow = {
+            'pending': ['packed'],
+            'packed': ['shipped'],
+            'shipped': ['delivered'],
+        }
 
-        if new_status not in allowed:
+        allowed_next = valid_flow.get(order.status, [])
+
+        if new_status not in allowed_next:
             return redirect('shopkeeper_order_detail', order_id=order.id)
 
-        if order.payment_method == 'ONLINE' and order.payment_status != 'PAID':
+        # ONLINE orders must be PAID
+        if (
+            order.payment_method == 'ONLINE'
+            and order.payment_status != 'PAID'
+        ):
             return redirect('shopkeeper_order_detail', order_id=order.id)
 
         order.status = new_status
@@ -119,7 +139,7 @@ def manage_coupons(request):
 
 
 # =====================================================
-# SHOPKEEPER: RETURNS & REFUNDS (ONCE)
+# SHOPKEEPER: RETURNS & REFUNDS (ONCE ONLY)
 # =====================================================
 @login_required
 @shopkeeper_only
@@ -128,17 +148,21 @@ def update_return_status(request, return_id):
     return_request = get_object_or_404(ReturnRequest, id=return_id)
 
     if request.method == 'POST':
-        status = request.POST.get('status')
+        new_status = request.POST.get('status')
 
-        if status not in ['approved', 'rejected', 'refunded']:
+        if new_status not in ['approved', 'rejected', 'refunded']:
             return redirect('shopkeeper_returns')
 
-        if return_request.status == status:
+        if return_request.status == new_status:
             return redirect('shopkeeper_returns')
 
-        return_request.status = status
+        # Prevent double refund
+        if return_request.status == 'refunded':
+            return redirect('shopkeeper_returns')
 
-        if status == 'refunded':
+        return_request.status = new_status
+
+        if new_status == 'refunded':
             order = return_request.order
             order.payment_status = 'REFUNDED'
             order.save()
@@ -154,10 +178,11 @@ def update_return_status(request, return_id):
 @login_required
 @shopkeeper_only
 def shopkeeper_returns(request):
-    returns = ReturnRequest.objects.select_related(
-        'order', 'order__user'
-    ).order_by('-created_at')
-
+    returns = (
+        ReturnRequest.objects
+        .select_related('order', 'order__user')
+        .order_by('-created_at')
+    )
     return render(request, 'shopkeeper/returns.html', {'returns': returns})
 
 

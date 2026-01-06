@@ -61,7 +61,7 @@
 <div class="variant-container">
 
     <div class="variant-title">
-        Add Variant
+        {% if edit_mode %}Edit Variant{% else %}Add Variant{% endif %}
     </div>
 
     <div class="variant-subtitle">
@@ -73,7 +73,7 @@
         {{ form.as_p }}
 
         <button type="submit">
-            Add Variant
+            {% if edit_mode %}Save Variant{% else %}Add Variant{% endif %}
         </button>
     </form>
 

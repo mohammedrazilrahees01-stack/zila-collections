@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+# =========================
+# CATEGORY
+# =========================
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True)
@@ -10,6 +13,9 @@ class Category(models.Model):
         return self.name
 
 
+# =========================
+# PRODUCT
+# =========================
 class Product(models.Model):
     category = models.ForeignKey(
         Category,
@@ -27,6 +33,9 @@ class Product(models.Model):
         return self.name
 
 
+# =========================
+# PRODUCT VARIANT
+# =========================
 class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product,
@@ -36,11 +45,15 @@ class ProductVariant(models.Model):
     size = models.CharField(max_length=20)
     color = models.CharField(max_length=30)
     stock = models.PositiveIntegerField()
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.size} - {self.color}"
 
 
+# =========================
+# PRODUCT IMAGE
+# =========================
 class ProductImage(models.Model):
     product = models.ForeignKey(
         Product,
@@ -48,15 +61,15 @@ class ProductImage(models.Model):
         related_name='images'
     )
     image = models.ImageField(upload_to='products/')
+    is_primary = models.BooleanField(default=False)
 
     def __str__(self):
         return self.product.name
 
 
-# -------------------------------------------------
-# PHASE 11 — REVIEWS & RATINGS (ADDED SAFELY)
-# -------------------------------------------------
-
+# =========================
+# REVIEWS & RATINGS
+# =========================
 class Review(models.Model):
     product = models.ForeignKey(
         Product,

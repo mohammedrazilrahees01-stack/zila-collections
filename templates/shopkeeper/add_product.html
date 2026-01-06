@@ -56,9 +56,20 @@
 
 <div class="add-product-container">
 
-    <div class="add-product-title">Add New Product</div>
+    <div class="add-product-title">
+        {% if edit_mode %}
+            Edit Product
+        {% else %}
+            Add New Product
+        {% endif %}
+    </div>
+
     <div class="add-product-subtitle">
-        Enter product details below. You can add variants in the next step.
+        {% if edit_mode %}
+            Update product details below.
+        {% else %}
+            Enter product details. You can add variants in the next step.
+        {% endif %}
     </div>
 
     <form method="post" class="add-product-form">
@@ -66,7 +77,7 @@
         {{ form.as_p }}
 
         <button type="submit">
-            Next: Add Variants →
+            {% if edit_mode %}Save Changes{% else %}Next: Add Variants →{% endif %}
         </button>
     </form>
 

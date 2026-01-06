@@ -1,126 +1,71 @@
-{% extends "shopkeeper/base.html" %}
+{% extends 'shopkeeper/base.html' %}
 
 {% block content %}
 <style>
-    .products-container {
-        max-width: 1100px;
+    .image-container {
+        max-width: 700px;
         margin: 0 auto;
         padding: 30px 20px;
-    }
-
-    .products-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 25px;
-    }
-
-    .products-header h2 {
-        font-size: 26px;
-        font-weight: 600;
-    }
-
-    .products-table {
-        width: 100%;
-        border-collapse: collapse;
         background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        overflow: hidden;
     }
 
-    .products-table th,
-    .products-table td {
-        padding: 12px 14px;
-        border-bottom: 1px solid #e5e7eb;
-        font-size: 14px;
-        text-align: left;
-    }
-
-    .products-table th {
-        background: #f9fafb;
+    .image-title {
+        font-size: 26px;
         font-weight: 600;
+        margin-bottom: 6px;
     }
 
-    .status-in {
-        color: #16a34a;
-        font-weight: 500;
-    }
-
-    .status-low {
-        color: #f59e0b;
-        font-weight: 500;
-    }
-
-    .status-out {
-        color: #dc2626;
-        font-weight: 500;
-    }
-
-    .manage-link a {
-        font-size: 13px;
-        color: #2563eb;
-        text-decoration: none;
-    }
-
-    .empty {
-        text-align: center;
-        padding: 40px;
+    .image-subtitle {
+        font-size: 14px;
         color: #6b7280;
+        margin-bottom: 25px;
+    }
+
+    .image-form p {
+        margin-bottom: 15px;
+    }
+
+    .image-form input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #fff;
+    }
+
+    .image-form button {
+        margin-top: 20px;
+        padding: 12px 18px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
     }
 </style>
 
-<div class="products-container">
+<div class="image-container">
 
-    <div class="products-header">
-        <h2>Products</h2>
+    <div class="image-title">
+        Add Product Images
     </div>
 
-    {% if products %}
-        <table class="products-table">
-            <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
+    <div class="image-subtitle">
+        Product: <strong>{{ product.name }}</strong>
+    </div>
 
-            {% for product in products %}
-            <tr>
-                <td>{{ product.name }}</td>
-                <td>₹{{ product.price }}</td>
-                <td>
-                    {% if product.variants.all %}
-                        {% with low=False out=False %}
-                            {% for v in product.variants.all %}
-                                {% if v.stock == 0 %}{% with out=True %}{% endwith %}{% endif %}
-                                {% if v.stock <= 5 %}{% with low=True %}{% endwith %}{% endif %}
-                            {% endfor %}
-                            {% if out %}
-                                <span class="status-out">Out of stock</span>
-                            {% elif low %}
-                                <span class="status-low">Low stock</span>
-                            {% else %}
-                                <span class="status-in">In stock</span>
-                            {% endif %}
-                        {% endwith %}
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-                <td class="manage-link">
-                    <a href="/products/shopkeeper/product/{{ product.id }}/variant/">
-                        Manage Variants →
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <div class="empty">
-            No products found.
-        </div>
-    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="image-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">
+            Upload Image
+        </button>
+    </form>
 
 </div>
 {% endblock %}
