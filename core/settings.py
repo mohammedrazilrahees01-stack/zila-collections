@@ -14,6 +14,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000/',
     'https://zilacollections.com',
     'https://www.zilacollections.com',
 ]
@@ -83,7 +84,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'staticfiles' # Where files go AFTER collectstatic
+STATICFILES_DIRS = [BASE_DIR / 'static'] # Where your source files are NOW
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
