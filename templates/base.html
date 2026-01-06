@@ -1,17 +1,232 @@
-{% if user.is_authenticated %}
-    {% if user.email == "zila@admin.com" %}
-        <a href="{% url 'shopkeeper_dashboard' %}">Dashboard</a>
-        <a href="{% url 'shopkeeper_orders' %}">Orders</a>
-        <a href="{% url 'analytics_dashboard' %}">Analytics</a>
-        <a href="{% url 'shopkeeper_customers' %}">Customers</a>
-        
-    {% else %}
-        <a href="{% url 'product_list' %}">Shop</a>
-        <a href="{% url 'my_orders' %}">My Orders</a>
-        <a href="{% url 'customer_profile' %}">Profile</a>
-    {% endif %}
-    <a href="{% url 'logout' %}">Logout</a>
-{% else %}
-    <a href="{% url 'customer_login' %}">Login</a>
-    <a href="{% url 'customer_register' %}">Register</a>
-{% endif %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zila Collections</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111111;
+            background: #ffffff;
+        }
+
+        /* ================= HEADER ================= */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+        }
+
+        .logo img {
+            height: 34px;
+        }
+
+        /* Desktop nav */
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links a {
+            margin-left: 22px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111111;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -6px;
+            width: 0;
+            height: 2px;
+            background: #F5B400;
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hamburger */
+        .menu-toggle {
+            display: none;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #111111;
+            margin: 4px 0;
+        }
+
+        /* Mobile menu */
+        .mobile-nav {
+            display: none;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .mobile-nav a {
+            display: block;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            text-decoration: none;
+            color: #111111;
+            font-size: 14px;
+        }
+
+        /* Toggle logic */
+        .menu-toggle:checked ~ .mobile-nav {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+        }
+
+        /* ================= CONTENT ================= */
+        .content-wrapper {
+            padding: 20px;
+            min-height: 70vh;
+        }
+
+        /* ================= FOOTER ================= */
+        .footer {
+            border-top: 1px solid #e5e7eb;
+            padding: 40px 20px;
+            background: #ffffff;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .footer h4 {
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .footer p {
+            font-size: 14px;
+            color: #4b5563;
+            margin: 6px 0;
+        }
+
+        .footer iframe {
+            width: 100%;
+            height: 200px;
+            border: 0;
+        }
+
+        .footer-bottom {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #6b7280;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">
+        <img src="{% static 'images/zila-logo.png' %}" alt="Zila Collections">
+    </div>
+
+    <!-- Hamburger toggle -->
+    <label class="hamburger" for="menu-toggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </label>
+    <input type="checkbox" id="menu-toggle" class="menu-toggle">
+
+    <!-- Desktop nav -->
+    <nav class="nav-links">
+        {% if user.is_authenticated %}
+            {% if user.email != "zila@admin.com" %}
+                <a href="{% url 'product_list' %}">Shop</a>
+                <a href="{% url 'my_orders' %}">My Orders</a>
+                <a href="{% url 'customer_profile' %}">Profile</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'customer_login' %}">Login</a>
+            <a href="{% url 'customer_register' %}">Register</a>
+        {% endif %}
+    </nav>
+
+    <!-- Mobile nav -->
+    <nav class="mobile-nav">
+        {% if user.is_authenticated %}
+            {% if user.email != "zila@admin.com" %}
+                <a href="{% url 'product_list' %}">Shop</a>
+                <a href="{% url 'my_orders' %}">My Orders</a>
+                <a href="{% url 'customer_profile' %}">Profile</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'customer_login' %}">Login</a>
+            <a href="{% url 'customer_register' %}">Register</a>
+        {% endif %}
+    </nav>
+</header>
+
+<div class="content-wrapper">
+    {% block content %}{% endblock %}
+</div>
+
+<footer class="footer">
+    <div class="footer-grid">
+        <div>
+            <h4>Zila Collections</h4>
+            <p>Modern clothing. Clean design. Everyday style.</p>
+            <p>Email: zilacollections3@gmail.com</p>
+            <p>Phone: +91 80754 37816</p>
+        </div>
+        <div>
+            <h4>Our Store</h4>
+            <iframe
+                src="https://www.google.com/maps?q=https://maps.app.goo.gl/GiDqDK3bjgVcved6A&output=embed"
+                loading="lazy">
+            </iframe>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        © {{ now|date:"Y" }} Zila Collections. All rights reserved.
+    </div>
+</footer>
+
+</body>
+</html>

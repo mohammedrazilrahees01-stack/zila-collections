@@ -1,26 +1,109 @@
-{% extends "base.html" %}
+{% extends "shopkeeper/base.html" %}
+
 {% block content %}
+<style>
+    .returns-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
 
-<h2>Return Requests</h2>
+    .returns-title {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
 
-{% for r in returns %}
-<div style="border:1px solid #ccc;padding:10px;margin-bottom:10px;">
-  <strong>Order #{{ r.order.id }}</strong><br>
-  Reason: {{ r.reason }}<br>
-  Status: {{ r.status }}<br>
+    .return-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 18px;
+        background: #fff;
+        margin-bottom: 20px;
+    }
 
-  <form method="post" action="{% url 'update_return_status' r.id %}">
-    {% csrf_token %}
-    <select name="status">
-      <option value="approved">Approve</option>
-      <option value="rejected">Reject</option>
-      <option value="refunded">Refunded</option>
-    </select>
-    <button type="submit">Update</button>
-  </form>
+    .return-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .return-body {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .status {
+        text-transform: capitalize;
+        font-weight: 600;
+    }
+
+    .update-form {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .update-form select {
+        padding: 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+    }
+
+    .update-form button {
+        padding: 8px 14px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .empty {
+        text-align: center;
+        color: #6b7280;
+        padding: 50px 0;
+    }
+</style>
+
+<div class="returns-container">
+    <div class="returns-title">Return Requests</div>
+
+    {% if returns %}
+        {% for r in returns %}
+        <div class="return-card">
+            <div class="return-header">
+                <div>
+                    Order #{{ r.order.id }}
+                </div>
+                <div class="status">
+                    {{ r.status }}
+                </div>
+            </div>
+
+            <div class="return-body">
+                <strong>Reason:</strong> {{ r.reason }}
+            </div>
+
+            <form method="post"
+                  action="{% url 'update_return_status' r.id %}"
+                  class="update-form">
+                {% csrf_token %}
+                <select name="status">
+                    <option value="approved">Approve</option>
+                    <option value="rejected">Reject</option>
+                    <option value="refunded">Refunded</option>
+                </select>
+                <button type="submit">
+                    Update Status
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">
+            No return requests.
+        </div>
+    {% endif %}
 </div>
-{% empty %}
-<p>No return requests</p>
-{% endfor %}
-
 {% endblock %}

@@ -1,158 +1,166 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Orders | Zila Collections</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f7f7f7;
-            margin: 0;
-            padding: 0;
-        }
 
-        header {
-            background: #000;
-            color: #fff;
-            padding: 20px;
-            font-size: 24px;
-        }
+{% block content %}
+<style>
+    .orders-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
 
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            background: #fff;
-            padding: 20px;
-        }
+    .orders-title {
+        font-size: 26px;
+        margin-bottom: 25px;
+    }
 
-        .order {
-            border: 1px solid #ddd;
-            margin-bottom: 25px;
-            padding: 15px;
-        }
+    .order-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 25px;
+        background: #fff;
+    }
 
-        .order h3 {
-            margin: 0 0 10px 0;
-        }
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+    .order-header strong {
+        font-weight: 600;
+    }
 
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
+    .status {
+        font-weight: 600;
+        text-transform: capitalize;
+    }
 
-        table th {
-            background: #f0f0f0;
-        }
+    .order-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 14px;
+    }
 
-        .totals {
-            margin-top: 10px;
-            text-align: right;
-        }
+    .order-table th,
+    .order-table td {
+        border: 1px solid #e5e7eb;
+        padding: 8px;
+        text-align: left;
+    }
 
-        .totals p {
-            margin: 4px 0;
-        }
+    .order-table th {
+        background: #f9fafb;
+    }
 
-        .actions {
-            margin-top: 15px;
-        }
+    .totals {
+        margin-top: 12px;
+        text-align: right;
+        font-size: 14px;
+    }
 
-        .actions a, .actions button {
-            display: inline-block;
-            padding: 8px 12px;
-            margin-right: 10px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            background: #000;
-            color: #fff;
-            font-size: 14px;
-        }
+    .totals p {
+        margin: 4px 0;
+    }
 
-        .actions button {
-            background: #c0392b;
-        }
+    .actions {
+        margin-top: 15px;
+    }
 
-        .status {
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
+    .actions a,
+    .actions button {
+        display: inline-block;
+        padding: 8px 12px;
+        margin-right: 10px;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        background: #111;
+        color: #fff;
+        font-size: 14px;
+        border-radius: 4px;
+    }
 
-<header>
-    Zila Collections — My Orders
-</header>
+    .actions button {
+        background: #c0392b;
+    }
 
-<div class="container">
+    .empty-orders {
+        text-align: center;
+        color: #6b7280;
+        padding: 60px 0;
+    }
+</style>
+
+<div class="orders-container">
+    <div class="orders-title">My Orders</div>
 
     {% if orders %}
         {% for order in orders %}
-            <div class="order">
-
-                <h3>Order #{{ order.id }}</h3>
-
-                <p><strong>Date:</strong> {{ order.created_at|date:"d M Y" }}</p>
-                <p><strong>Status:</strong>
-                    <span class="status">{{ order.status|capfirst }}</span>
-                </p>
-                <p><strong>Payment:</strong> {{ order.payment_method }} — {{ order.payment_status }}</p>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Variant</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in order.items.all %}
-                            <tr>
-                                <td>{{ item.variant.product.name }}</td>
-                                <td>{{ item.variant.size }} / {{ item.variant.color }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>₹{{ item.price }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <div class="totals">
-                    <p><strong>Original Total:</strong> ₹{{ order.original_total|floatformat:2 }}</p>
-                    <p><strong>Discount:</strong> - ₹{{ order.discount_amount|floatformat:2 }}</p>
-                    <p><strong>Final Total:</strong> ₹{{ order.final_total|floatformat:2 }}</p>
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <strong>Order #{{ order.id }}</strong><br>
+                    {{ order.created_at|date:"d M Y" }}
                 </div>
-
-                <div class="actions">
-                    <a href="{% url 'download_invoice' order.id %}">
-                        Download Invoice (PDF)
-                    </a>
-
-                    {% if order.status == 'pending' or order.status == 'packed' %}
-                        <form method="post" action="{% url 'cancel_order' order.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit">Cancel Order</button>
-                        </form>
-                    {% endif %}
+                <div>
+                    <div class="status">Status: {{ order.status }}</div>
+                    <div>Payment: {{ order.payment_method }} — {{ order.payment_status }}</div>
                 </div>
-
             </div>
+
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Variant</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.variant.product.name }}</td>
+                        <td>{{ item.variant.size }} / {{ item.variant.color }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="totals">
+                <p><strong>Original Total:</strong> ₹{{ order.original_total|floatformat:2 }}</p>
+                <p><strong>Discount:</strong> − ₹{{ order.discount_amount|floatformat:2 }}</p>
+                <p><strong>Final Total:</strong> ₹{{ order.final_total|floatformat:2 }}</p>
+            </div>
+
+            <div class="actions">
+                <a href="{% url 'download_invoice' order.id %}">
+                    Download Invoice
+                </a>
+
+                {% if order.status == 'pending' or order.status == 'packed' %}
+                <form method="post"
+                      action="{% url 'cancel_order' order.id %}"
+                      style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">
+                        Cancel Order
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
     {% else %}
-        <p>No orders found.</p>
+        <div class="empty-orders">
+            <p>No orders found.</p>
+        </div>
     {% endif %}
-
 </div>
-
-</body>
-</html>
+{% endblock %}

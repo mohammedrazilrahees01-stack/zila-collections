@@ -1,33 +1,118 @@
-<h2>Shopkeeper Orders</h2>
+{% extends "shopkeeper/base.html" %}
 
-<table border="1" cellpadding="8">
-    <tr>
-        <th>Order ID</th>
-        <th>Customer</th>
-        <th>Total</th>
-        <th>Payment</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
+{% block content %}
+<style>
+    .orders-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-    {% for order in orders %}
-    <tr>
-        <td>#{{ order.id }}</td>
-        <td>{{ order.user.email }}</td>
-        <td>₹{{ order.final_total }}</td>
+    .orders-title {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
 
-        <td>
-            {{ order.payment_method }}<br>
-            <strong>{{ order.payment_status }}</strong>
-        </td>
+    .table-wrapper {
+        overflow-x: auto;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+    }
 
-        <td>{{ order.status }}</td>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
 
-        <td>
-            <a href="{% url 'shopkeeper_order_detail' order.id %}">
-                View
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    th {
+        background: #f9fafb;
+        font-weight: 600;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .payment-status {
+        font-weight: 600;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .status {
+        text-transform: capitalize;
+        font-weight: 600;
+    }
+
+    .view-btn {
+        text-decoration: none;
+        padding: 6px 10px;
+        background: #111;
+        color: #fff;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 50px;
+        color: #6b7280;
+    }
+</style>
+
+<div class="orders-container">
+    <div class="orders-title">Orders</div>
+
+    {% if orders %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.user.email }}</td>
+                        <td>₹{{ order.final_total }}</td>
+                        <td>
+                            {{ order.payment_method }}
+                            <span class="payment-status">
+                                {{ order.payment_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status">{{ order.status }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'shopkeeper_order_detail' order.id %}" class="view-btn">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty">
+            No orders found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

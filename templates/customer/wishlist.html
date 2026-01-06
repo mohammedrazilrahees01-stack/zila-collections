@@ -1,19 +1,99 @@
 {% extends "base.html" %}
-{% block content %}
-<h2>My Wishlist</h2>
 
-{% if items %}
-<ul>
-    {% for item in items %}
-    <li>
-        {{ item.variant.product.name }}
-        ({{ item.variant.size }} / {{ item.variant.color }})
-        <a href="/cart/add/{{ item.variant.id }}/">Add to Cart</a>
-        <a href="/wishlist/remove/{{ item.variant.id }}/">Remove</a>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p>No items in wishlist.</p>
-{% endif %}
+{% block content %}
+<style>
+    .wishlist-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .wishlist-title {
+        font-size: 26px;
+        margin-bottom: 25px;
+    }
+
+    .wishlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .wishlist-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        background: #fff;
+    }
+
+    .wishlist-name {
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .wishlist-variant {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .wishlist-actions a {
+        display: inline-block;
+        padding: 8px 12px;
+        margin-right: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        border-radius: 4px;
+    }
+
+    .add-cart {
+        background: #F5B400;
+        color: #111;
+        font-weight: 600;
+    }
+
+    .remove {
+        background: #111;
+        color: #fff;
+    }
+
+    .empty-wishlist {
+        text-align: center;
+        color: #6b7280;
+        padding: 60px 0;
+    }
+</style>
+
+<div class="wishlist-container">
+    <div class="wishlist-title">My Wishlist</div>
+
+    {% if items %}
+        <div class="wishlist-grid">
+            {% for item in items %}
+                <div class="wishlist-card">
+                    <div class="wishlist-name">
+                        {{ item.variant.product.name }}
+                    </div>
+
+                    <div class="wishlist-variant">
+                        {{ item.variant.size }} / {{ item.variant.color }}
+                    </div>
+
+                    <div class="wishlist-actions">
+                        <a href="{% url 'cart:add_to_cart' item.variant.id %}" class="add-cart">
+                            Add to Cart
+                        </a>
+
+                        <a href="{% url 'remove_from_wishlist' item.variant.id %}" class="remove">
+                            Remove
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-wishlist">
+            <p>No items in wishlist.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -57,7 +57,8 @@ def login_view(request):
 
             if user.email == 'zila@admin.com':
                 return redirect('shopkeeper_dashboard')
-            return redirect('customer_home')
+            else:
+                return redirect('customer_home')
 
         return render(request, 'customer/login.html', {
             'error': 'Invalid email or password'
@@ -72,7 +73,6 @@ def logout_view(request):
 
 
 def verify_email(request, token):
-    # keep your existing verification logic
     return redirect('customer_login')
 
 
@@ -83,7 +83,12 @@ def verify_email(request, token):
 def customer_home(request):
     if request.user.email == 'zila@admin.com':
         return redirect('shopkeeper_dashboard')
-    return render(request, 'customer/home.html')
+
+    products = Product.objects.filter(is_active=True).order_by('-created_at')[:8]
+
+    return render(request, 'customer/home.html', {
+        'products': products
+    })
 
 
 @login_required
@@ -155,7 +160,7 @@ def shopkeeper_login(request):
             return redirect('shopkeeper_dashboard')
 
         return render(request, 'shopkeeper/login.html', {
-            'error': 'Unauthorized access'
+            'error': 'Invalid admin credentials'
         })
 
     return render(request, 'shopkeeper/login.html')
@@ -164,6 +169,7 @@ def shopkeeper_login(request):
 def shopkeeper_logout(request):
     logout(request)
     return redirect('/shopkeeper/login/')
+
 
 # =========================
 # SHOPKEEPER DASHBOARD

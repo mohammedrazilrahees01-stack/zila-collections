@@ -12,21 +12,20 @@ from .views import (
 )
 
 urlpatterns = [
+    # ROOT ENTRY
     path('', home_view, name='home'),
 
-    # Customer auth
+    # CUSTOMER AUTH
     path('login/', login_view, name='customer_login'),
     path('register/', register_view, name='customer_register'),
     path('logout/', logout_view, name='logout'),
 
-    # Customer pages
+    # CUSTOMER PAGES
     path('customer/home/', customer_home, name='customer_home'),
     path('customer/profile/', profile_view, name='customer_profile'),
 
-    # Shopkeeper auth
+    # SHOPKEEPER AUTH & DASHBOARD
     path('shopkeeper/login/', shopkeeper_login, name='shopkeeper_login'),
     path('shopkeeper/logout/', shopkeeper_logout, name='shopkeeper_logout'),
-
-    # Shopkeeper dashboard
     path('shopkeeper/dashboard/', shopkeeper_dashboard, name='shopkeeper_dashboard'),
 ]

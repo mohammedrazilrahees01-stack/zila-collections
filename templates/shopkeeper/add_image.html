@@ -1,8 +1,71 @@
-{% extends 'base.html' %}
+{% extends 'shopkeeper/base.html' %}
+
 {% block content %}
-<h2>Add Images for {{ product.name }}</h2>
-<form method="post" enctype="multipart/form-data">{% csrf_token %}
-{{ form.as_p }}
-<button type="submit">Upload</button>
-</form>
+<style>
+    .image-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+    }
+
+    .image-title {
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .image-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 25px;
+    }
+
+    .image-form p {
+        margin-bottom: 15px;
+    }
+
+    .image-form input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #fff;
+    }
+
+    .image-form button {
+        margin-top: 20px;
+        padding: 12px 18px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="image-container">
+
+    <div class="image-title">
+        Add Product Images
+    </div>
+
+    <div class="image-subtitle">
+        Product: <strong>{{ product.name }}</strong>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="image-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">
+            Upload Image
+        </button>
+    </form>
+
+</div>
 {% endblock %}

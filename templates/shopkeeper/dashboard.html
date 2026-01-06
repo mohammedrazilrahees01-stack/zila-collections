@@ -1,5 +1,105 @@
-{% extends 'base.html' %}
+{% extends 'shopkeeper/base.html' %}
+
 {% block content %}
-<h2>Shopkeeper Dashboard</h2>
-<p>Owner access only</p>
+<style>
+    .dashboard-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .dashboard-header {
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h2 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .dashboard-header p {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .dashboard-card h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-card p {
+        font-size: 13px;
+        color: #4b5563;
+        margin-bottom: 12px;
+    }
+
+    .dashboard-card a {
+        font-size: 13px;
+        color: #2563eb;
+        text-decoration: none;
+    }
+</style>
+
+<div class="dashboard-container">
+
+    <div class="dashboard-header">
+        <h2>Shopkeeper Dashboard</h2>
+        <p>Manage orders, products, customers, and returns from one place.</p>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="dashboard-card">
+            <h3>Orders</h3>
+            <p>View and manage customer orders and payments.</p>
+            <a href="{% url 'shopkeeper_orders' %}">Go to Orders →</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Analytics</h3>
+            <p>Track revenue, top products, and customer activity.</p>
+            <a href="{% url 'analytics_dashboard' %}">View Analytics →</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Products</h3>
+            <p>Add, update, and manage your product catalog.</p>
+            <a href="{% url 'shopkeeper_products' %}">Manage Products →</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Customers</h3>
+            <p>Browse registered customers and their order history.</p>
+            <a href="{% url 'shopkeeper_customers' %}">View Customers →</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Returns</h3>
+            <p>Review and process product return requests.</p>
+            <a href="{% url 'shopkeeper_returns' %}">Handle Returns →</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>Coupons</h3>
+            <p>Create and manage discount coupons.</p>
+            <a href="{% url 'manage_coupons' %}">Manage Coupons →</a>
+        </div>
+
+    </div>
+
+</div>
 {% endblock %}

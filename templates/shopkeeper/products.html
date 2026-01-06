@@ -1,43 +1,126 @@
-{% extends "base.html" %}
+{% extends "shopkeeper/base.html" %}
+
 {% block content %}
-<h2>Products (Shopkeeper)</h2>
+<style>
+    .products-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
 
-<table border="1" cellpadding="6" width="100%">
-    <tr>
-        <th>Name</th>
-        <th>Price</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
+    .products-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
 
-    {% for product in products %}
-    <tr>
-        <td>{{ product.name }}</td>
-        <td>₹{{ product.price }}</td>
-        <td>
-            {% if product.variants.all %}
-                {% with low=False out=False %}
-                    {% for v in product.variants.all %}
-                        {% if v.stock == 0 %}{% with out=True %}{% endwith %}{% endif %}
-                        {% if v.stock <= 5 %}{% with low=True %}{% endwith %}{% endif %}
-                    {% endfor %}
-                    {% if out %}
-                        <span style="color:red;">Out of stock</span>
-                    {% elif low %}
-                        <span style="color:orange;">Low stock</span>
+    .products-header h2 {
+        font-size: 26px;
+        font-weight: 600;
+    }
+
+    .products-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .products-table th,
+    .products-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+        text-align: left;
+    }
+
+    .products-table th {
+        background: #f9fafb;
+        font-weight: 600;
+    }
+
+    .status-in {
+        color: #16a34a;
+        font-weight: 500;
+    }
+
+    .status-low {
+        color: #f59e0b;
+        font-weight: 500;
+    }
+
+    .status-out {
+        color: #dc2626;
+        font-weight: 500;
+    }
+
+    .manage-link a {
+        font-size: 13px;
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 40px;
+        color: #6b7280;
+    }
+</style>
+
+<div class="products-container">
+
+    <div class="products-header">
+        <h2>Products</h2>
+    </div>
+
+    {% if products %}
+        <table class="products-table">
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>₹{{ product.price }}</td>
+                <td>
+                    {% if product.variants.all %}
+                        {% with low=False out=False %}
+                            {% for v in product.variants.all %}
+                                {% if v.stock == 0 %}{% with out=True %}{% endwith %}{% endif %}
+                                {% if v.stock <= 5 %}{% with low=True %}{% endwith %}{% endif %}
+                            {% endfor %}
+                            {% if out %}
+                                <span class="status-out">Out of stock</span>
+                            {% elif low %}
+                                <span class="status-low">Low stock</span>
+                            {% else %}
+                                <span class="status-in">In stock</span>
+                            {% endif %}
+                        {% endwith %}
                     {% else %}
-                        <span style="color:green;">In stock</span>
+                        —
                     {% endif %}
-                {% endwith %}
-            {% else %}
-                —
-            {% endif %}
-        </td>
-        <td>
-            <a href="/products/shopkeeper/product/{{ product.id }}/variant/">Manage Variants</a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+                </td>
+                <td class="manage-link">
+                    <a href="/products/shopkeeper/product/{{ product.id }}/variant/">
+                        Manage Variants →
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <div class="empty">
+            No products found.
+        </div>
+    {% endif %}
 
+</div>
 {% endblock %}

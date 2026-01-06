@@ -1,16 +1,94 @@
-{% extends "base.html" %}
+{% extends "shopkeeper/base.html" %}
+
 {% block content %}
-<h2>Coupons</h2>
+<style>
+    .coupons-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
 
-<form method="post">{% csrf_token %}
-<input name="code" placeholder="CODE">
-<input name="discount" placeholder="Discount %" type="number">
-<button type="submit">Add</button>
-</form>
+    .coupons-title {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
 
-<ul>
-{% for c in coupons %}
-<li>{{ c.code }} - {{ c.discount_percent }}%</li>
-{% endfor %}
-</ul>
+    .coupon-form {
+        display: grid;
+        grid-template-columns: 2fr 1fr auto;
+        gap: 10px;
+        margin-bottom: 25px;
+        background: #fff;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+    }
+
+    .coupon-form input {
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .coupon-form button {
+        padding: 10px 16px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .coupon-list {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+    }
+
+    .coupon-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .coupon-item:last-child {
+        border-bottom: none;
+    }
+
+    .empty {
+        text-align: center;
+        color: #6b7280;
+        padding: 40px 0;
+    }
+</style>
+
+<div class="coupons-container">
+    <div class="coupons-title">Coupons</div>
+
+    <form method="post" class="coupon-form">
+        {% csrf_token %}
+        <input name="code" placeholder="Coupon Code" required>
+        <input name="discount" placeholder="Discount %" type="number" required>
+        <button type="submit">Add Coupon</button>
+    </form>
+
+    {% if coupons %}
+        <div class="coupon-list">
+            {% for c in coupons %}
+                <div class="coupon-item">
+                    <span><strong>{{ c.code }}</strong></span>
+                    <span>{{ c.discount_percent }}%</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            No coupons created yet.
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

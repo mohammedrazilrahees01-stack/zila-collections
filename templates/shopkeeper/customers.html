@@ -1,25 +1,118 @@
-<h2>Customers</h2>
+{% extends "shopkeeper/base.html" %}
 
-<form method="get">
-    <input type="text" name="q" placeholder="Search name/email"
-           value="{{ query }}">
-    <button type="submit">Search</button>
-</form>
+{% block content %}
+<style>
+    .customers-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
 
-<hr>
+    .customers-title {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
 
-<table border="1" cellpadding="10">
-    <tr>
-        <th>Name</th>
-        <th>Email</th>
-    </tr>
+    .search-bar {
+        margin-bottom: 20px;
+    }
 
-    {% for user in customers %}
-        <tr>
-            <td>{{ user.username }}</td>
-            <td>{{ user.email }}</td>
-        </tr>
-    {% empty %}
-        <tr><td colspan="2">No customers</td></tr>
-    {% endfor %}
-</table>
+    .search-bar form {
+        display: flex;
+        gap: 10px;
+        max-width: 400px;
+    }
+
+    .search-bar input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .search-bar button {
+        padding: 10px 16px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+    }
+
+    th {
+        background: #f9fafb;
+        font-weight: 600;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 40px;
+        color: #6b7280;
+    }
+</style>
+
+<div class="customers-container">
+    <div class="customers-title">Customers</div>
+
+    <div class="search-bar">
+        <form method="get">
+            <input type="text"
+                   name="q"
+                   placeholder="Search name or email"
+                   value="{{ query }}">
+            <button type="submit">
+                Search
+            </button>
+        </form>
+    </div>
+
+    {% if customers %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in customers %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty">
+            No customers found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,59 +1,117 @@
-{% extends "base.html" %}
+{% extends "shopkeeper/base.html" %}
+
 {% block content %}
+<style>
+    .analytics-wrapper {
+        padding: 30px;
+    }
 
-<h2>Analytics Dashboard</h2>
+    h2 {
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
 
-<hr>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin: 25px 0;
+    }
 
-<h3>Overview</h3>
-<ul>
-  <li>Total Orders: {{ total_orders }}</li>
-  <li>Delivered Orders: {{ delivered_orders }}</li>
-  <li>Pending Orders: {{ pending_orders }}</li>
-  <li>Returned Orders: {{ returned_orders }}</li>
-</ul>
+    .stat-card {
+        border: 1px solid #e5e7eb;
+        padding: 18px;
+        border-radius: 6px;
+        background: #ffffff;
+    }
 
-<h3>Revenue</h3>
-<ul>
-  <li>Total Revenue: ₹{{ total_revenue }}</li>
-  <li>Last 7 Days: ₹{{ revenue_7_days }}</li>
-  <li>Last 30 Days: ₹{{ revenue_30_days }}</li>
-</ul>
+    .stat-card h4 {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
 
-<h3>Top Products</h3>
-<table border="1" cellpadding="6">
-  <tr>
-    <th>Product</th>
-    <th>Quantity Sold</th>
-    <th>Revenue</th>
-  </tr>
-  {% for p in top_products %}
-  <tr>
-    <td>{{ p.variant__product__name }}</td>
-    <td>{{ p.sold_qty }}</td>
-    <td>₹{{ p.revenue }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="3">No data</td></tr>
-  {% endfor %}
-</table>
+    .stat-card p {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111111;
+    }
 
-<h3>Top Customers</h3>
-<table border="1" cellpadding="6">
-  <tr>
-    <th>Customer</th>
-    <th>Orders</th>
-    <th>Total Spent</th>
-  </tr>
-  {% for c in top_customers %}
-  <tr>
-    <td>{{ c.user__username }}</td>
-    <td>{{ c.orders }}</td>
-    <td>₹{{ c.total_spent }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="3">No data</td></tr>
-  {% endfor %}
-</table>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
 
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    th {
+        background: #f9fafb;
+        font-weight: 600;
+    }
+
+    .section {
+        margin-top: 40px;
+    }
+</style>
+
+<div class="analytics-wrapper">
+    <h2>Analytics Dashboard</h2>
+
+    <div class="stats-grid">
+        <div class="stat-card"><h4>Total Orders</h4><p>{{ total_orders }}</p></div>
+        <div class="stat-card"><h4>Delivered</h4><p>{{ delivered_orders }}</p></div>
+        <div class="stat-card"><h4>Pending</h4><p>{{ pending_orders }}</p></div>
+        <div class="stat-card"><h4>Returned</h4><p>{{ returned_orders }}</p></div>
+        <div class="stat-card"><h4>Total Revenue</h4><p>₹{{ total_revenue }}</p></div>
+        <div class="stat-card"><h4>Last 7 Days</h4><p>₹{{ revenue_7_days }}</p></div>
+        <div class="stat-card"><h4>Last 30 Days</h4><p>₹{{ revenue_30_days }}</p></div>
+    </div>
+
+    <div class="section">
+        <h3>Top Products</h3>
+        <table>
+            <tr>
+                <th>Product</th>
+                <th>Quantity Sold</th>
+                <th>Revenue</th>
+            </tr>
+            {% for p in top_products %}
+            <tr>
+                <td>{{ p.variant__product__name }}</td>
+                <td>{{ p.quantity_sold }}</td>
+                <td>₹{{ p.revenue }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">No data</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Top Customers</h3>
+        <table>
+            <tr>
+                <th>Customer</th>
+                <th>Orders</th>
+                <th>Total Spent</th>
+            </tr>
+            {% for c in top_customers %}
+            <tr>
+                <td>{{ c.order__user__email }}</td>
+                <td>{{ c.orders }}</td>
+                <td>₹{{ c.total_spent }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">No data</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
 {% endblock %}

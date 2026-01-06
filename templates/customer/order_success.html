@@ -1,7 +1,90 @@
-<h2>Order Placed Successfully</h2>
+{% extends "base.html" %}
 
-<p><strong>Order ID:</strong> #{{ order.id }}</p>
-<p><strong>Status:</strong> {{ order.status }}</p>
-<p><strong>Payment Status:</strong> {{ order.payment_status }}</p>
+{% block content %}
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
 
-<a href="{% url 'my_orders' %}">View My Orders</a>
+    .success-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 30px;
+        background: #fff;
+    }
+
+    .success-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #111;
+    }
+
+    .success-sub {
+        color: #16a34a;
+        font-weight: 600;
+        margin-bottom: 25px;
+    }
+
+    .order-info {
+        text-align: left;
+        margin: 0 auto 25px;
+        max-width: 360px;
+        font-size: 15px;
+    }
+
+    .order-info div {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .order-info strong {
+        font-weight: 600;
+    }
+
+    .success-btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #F5B400;
+        color: #111;
+        font-weight: 600;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-title">
+            Order Placed Successfully
+        </div>
+
+        <div class="success-sub">
+            Thank you for shopping with Zila Collections
+        </div>
+
+        <div class="order-info">
+            <div>
+                <strong>Order ID</strong>
+                <span>#{{ order.id }}</span>
+            </div>
+            <div>
+                <strong>Status</strong>
+                <span>{{ order.status }}</span>
+            </div>
+            <div>
+                <strong>Payment</strong>
+                <span>{{ order.payment_status }}</span>
+            </div>
+        </div>
+
+        <a href="{% url 'my_orders' %}" class="success-btn">
+            View My Orders
+        </a>
+    </div>
+</div>
+{% endblock %}
+    

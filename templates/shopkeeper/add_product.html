@@ -1,8 +1,74 @@
-{% extends 'base.html' %}
+{% extends "shopkeeper/base.html" %}
+
 {% block content %}
-<h2>Add Product</h2>
-<form method="post">{% csrf_token %}
-{{ form.as_p }}
-<button type="submit">Next: Add Variants</button>
-</form>
+<style>
+    .add-product-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+    }
+
+    .add-product-title {
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .add-product-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 25px;
+    }
+
+    .add-product-form p {
+        margin-bottom: 15px;
+    }
+
+    .add-product-form input,
+    .add-product-form select,
+    .add-product-form textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .add-product-form textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .add-product-form button {
+        margin-top: 20px;
+        padding: 12px 18px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="add-product-container">
+
+    <div class="add-product-title">Add New Product</div>
+    <div class="add-product-subtitle">
+        Enter product details below. You can add variants in the next step.
+    </div>
+
+    <form method="post" class="add-product-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">
+            Next: Add Variants →
+        </button>
+    </form>
+
+</div>
 {% endblock %}

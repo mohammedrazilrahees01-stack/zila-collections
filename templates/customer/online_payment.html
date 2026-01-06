@@ -1,41 +1,123 @@
+{% extends "base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Online Payment</title>
-</head>
-<body>
+{% block content %}
+<style>
+    .payment-container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 25px;
+    }
 
-<h2>Complete Payment</h2>
+    .payment-title {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
 
-<p><strong>Order ID:</strong> #{{ order.id }}</p>
-<p><strong>Amount:</strong> ₹{{ order.final_total }}</p>
+    .order-info {
+        margin-bottom: 20px;
+        color: #374151;
+        font-size: 14px;
+    }
 
-<hr>
+    .upi-box {
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
 
-<h3>Pay via UPI</h3>
+    .upi-box p {
+        margin: 6px 0;
+        font-size: 14px;
+    }
 
-<p><strong>UPI ID:</strong> mohammedrazilrahees01@oksbi</p>
-<p><strong>Reference:</strong> ORDER{{ order.id }}</p>
+    .qr {
+        text-align: center;
+        margin: 15px 0;
+    }
 
-<img src="{% static 'images/upi_qr.png' %}" width="220">
+    .qr img {
+        width: 220px;
+    }
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+    .payment-form label {
+        font-size: 14px;
+        margin-top: 12px;
+        display: block;
+    }
 
-    <label>UPI Reference ID</label><br>
-    <input type="text" name="payment_reference" required><br><br>
+    .payment-form input[type="text"],
+    .payment-form input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+    }
 
-    <label>Payment Screenshot</label><br>
-    <input type="file" name="payment_screenshot" required><br><br>
+    .payment-form button {
+        margin-top: 20px;
+        width: 100%;
+        padding: 12px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+    }
 
-    <button type="submit">Submit Payment</button>
-</form>
+    .back-link {
+        text-align: center;
+        margin-top: 15px;
+    }
 
-<hr>
+    .back-link a {
+        font-size: 14px;
+        color: #2563eb;
+        text-decoration: none;
+    }
+</style>
 
-<a href="{% url 'my_orders' %}">Go to My Orders</a>
+<div class="payment-container">
 
-</body>
-</html>
+    <div class="payment-title">Complete Payment</div>
+
+    <div class="order-info">
+        <p><strong>Order ID:</strong> #{{ order.id }}</p>
+        <p><strong>Amount Payable:</strong> ₹{{ order.final_total }}</p>
+    </div>
+
+    <div class="upi-box">
+        <p><strong>UPI ID:</strong> mohammedrazilrahees01@oksbi</p>
+        <p><strong>Payment Reference:</strong> ORDER{{ order.id }}</p>
+
+        <div class="qr">
+            <img src="{% static 'images/upi_qr.png' %}" alt="UPI QR Code">
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="payment-form">
+        {% csrf_token %}
+
+        <label>UPI Reference ID</label>
+        <input type="text" name="payment_reference" required>
+
+        <label>Payment Screenshot</label>
+        <input type="file" name="payment_screenshot" required>
+
+        <button type="submit">Submit Payment</button>
+    </form>
+
+    <div class="back-link">
+        <a href="{% url 'my_orders' %}">Go to My Orders</a>
+    </div>
+
+</div>
+{% endblock %}

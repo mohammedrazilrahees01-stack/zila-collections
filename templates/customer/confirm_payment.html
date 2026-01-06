@@ -1,13 +1,77 @@
-<h2>Confirm Payment</h2>
+{% extends "base.html" %}
+{% load static %}
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
+{% block content %}
+<style>
+    .confirm-container {
+        max-width: 520px;
+        margin: 40px auto;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 25px;
+    }
 
-  <label>UPI Reference ID</label><br>
-  <input type="text" name="reference" required><br><br>
+    .confirm-title {
+        font-size: 22px;
+        margin-bottom: 15px;
+    }
 
-  <label>Upload Payment Screenshot</label><br>
-  <input type="file" name="screenshot" required><br><br>
+    .confirm-note {
+        font-size: 14px;
+        color: #4b5563;
+        margin-bottom: 20px;
+    }
 
-  <button type="submit">Submit</button>
-</form>
+    .confirm-form label {
+        display: block;
+        font-size: 14px;
+        margin-top: 12px;
+    }
+
+    .confirm-form input[type="text"],
+    .confirm-form input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .confirm-form button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="confirm-container">
+
+    <div class="confirm-title">Confirm Payment</div>
+
+    <div class="confirm-note">
+        Please enter your UPI reference number and upload the payment screenshot
+        to confirm your payment.
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="confirm-form">
+        {% csrf_token %}
+
+        <label>UPI Reference ID</label>
+        <input type="text" name="payment_reference" required>
+
+        <label>Payment Screenshot</label>
+        <input type="file" name="payment_screenshot" required>
+
+        <button type="submit">Submit Payment</button>
+    </form>
+
+</div>
+{% endblock %}

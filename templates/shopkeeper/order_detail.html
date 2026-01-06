@@ -1,20 +1,124 @@
-<h2>Order #{{ order.id }}</h2>
+{% extends "shopkeeper/base.html" %}
 
-<h3>Customer</h3>
-<p>{{ order.user.username }} — {{ order.user.email }}</p>
+{% block content %}
+<style>
+    .order-detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
 
-<h3>Payment</h3>
-<p>Method: {{ order.payment_method }}</p>
-<p>Status: {{ order.payment_status }}</p>
+    .order-title {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
 
-{% if order.payment_screenshot %}
-    <img src="{{ order.payment_screenshot.url }}" width="300">
-{% endif %}
+    .detail-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 20px;
+        background: #fff;
+        margin-bottom: 20px;
+    }
 
-{% if order.payment_status == 'PAYMENT UNDER REVIEW' %}
-<form method="post" action="{% url 'verify_payment' order.id %}">
-    {% csrf_token %}
-    <button name="action" value="approve">Approve</button>
-    <button name="action" value="reject">Reject</button>
-</form>
-{% endif %}
+    .detail-card h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+
+    .detail-row {
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .detail-row strong {
+        font-weight: 600;
+    }
+
+    .payment-proof img {
+        max-width: 100%;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+
+    .action-box {
+        display: flex;
+        gap: 14px;
+        margin-top: 15px;
+    }
+
+    .approve-btn {
+        padding: 10px 16px;
+        background: #16a34a;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .reject-btn {
+        padding: 10px 16px;
+        background: #dc2626;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+</style>
+
+<div class="order-detail-container">
+    <div class="order-title">
+        Order #{{ order.id }}
+    </div>
+
+    <!-- CUSTOMER DETAILS -->
+    <div class="detail-card">
+        <h3>Customer</h3>
+        <div class="detail-row">
+            <strong>Name:</strong> {{ order.user.username }}
+        </div>
+        <div class="detail-row">
+            <strong>Email:</strong> {{ order.user.email }}
+        </div>
+    </div>
+
+    <!-- PAYMENT DETAILS -->
+    <div class="detail-card">
+        <h3>Payment</h3>
+        <div class="detail-row">
+            <strong>Method:</strong> {{ order.payment_method }}
+        </div>
+        <div class="detail-row">
+            <strong>Status:</strong> {{ order.payment_status }}
+        </div>
+
+        {% if order.payment_screenshot %}
+        <div class="payment-proof">
+            <strong>Payment Proof:</strong><br>
+            <img src="{{ order.payment_screenshot.url }}" alt="Payment Screenshot">
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ACTIONS -->
+    {% if order.payment_status == 'PAYMENT UNDER REVIEW' %}
+    <div class="detail-card">
+        <h3>Verify Payment</h3>
+        <form method="post" action="{% url 'verify_payment' order.id %}">
+            {% csrf_token %}
+            <div class="action-box">
+                <button type="submit" name="action" value="approve" class="approve-btn">
+                    Approve Payment
+                </button>
+                <button type="submit" name="action" value="reject" class="reject-btn">
+                    Reject Payment
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

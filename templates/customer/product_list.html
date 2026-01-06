@@ -1,59 +1,159 @@
+{% extends "base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Products</title>
-</head>
-<body>
+{% block content %}
+<style>
+    .shop-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-<h2>Products</h2>
+    .filter-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin-bottom: 30px;
+    }
 
-<form method="get">
-    <input type="text" name="search" placeholder="Search" value="{{ search }}">
-    <select name="category">
-        <option value="all">All Categories</option>
-        {% for cat in categories %}
-            <option value="{{ cat.id }}"
-                {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
-                {{ cat.name }}
-            </option>
-        {% endfor %}
-    </select>
-    <input type="number" name="max_price" placeholder="Max Price" value="{{ max_price }}">
-    <select name="sort">
-        <option value="">Sort</option>
-        <option value="price_low">Price Low</option>
-        <option value="price_high">Price High</option>
-        <option value="newest">Newest</option>
-    </select>
-    <button type="submit">Apply</button>
-</form>
+    .filter-bar input,
+    .filter-bar select,
+    .filter-bar button {
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+    }
 
-<hr>
+    .filter-bar button {
+        background: #111;
+        color: #fff;
+        cursor: pointer;
+    }
 
-{% if products %}
-    {% for product in products %}
-        <div style="border:1px solid #ccc;padding:15px;margin-bottom:20px;">
-            <h3>{{ product.name }}</h3>
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 24px;
+    }
 
-            {% if product.images.first %}
-                <img src="{{ product.images.first.image.url }}"
-                     width="200">
-            {% else %}
-                <p>No image</p>
-            {% endif %}
+    .product-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 14px;
+        background: #fff;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
 
-            <p>₹{{ product.price }}</p>
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
 
-            <a href="{% url 'product_detail' product.slug %}">
-                View Product
-            </a>
+    .product-image {
+        width: 100%;
+        height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+        margin-bottom: 12px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .product-name {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #111;
+    }
+
+    .product-price {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .product-card a {
+        display: inline-block;
+        text-decoration: none;
+        font-size: 14px;
+        color: #111;
+        font-weight: 500;
+        border-bottom: 2px solid #F5B400;
+        padding-bottom: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #6b7280;
+        padding: 60px 0;
+    }
+</style>
+
+<div class="shop-container">
+    <h2>Shop</h2>
+
+    <!-- FILTERS -->
+    <form method="get" class="filter-bar">
+        <input type="text" name="search" placeholder="Search products"
+               value="{{ search }}">
+
+        <select name="category">
+            <option value="all">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}"
+                    {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <input type="number" name="max_price" placeholder="Max price"
+               value="{{ max_price }}">
+
+        <select name="sort">
+            <option value="">Sort</option>
+            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+        </select>
+
+        <button type="submit">Apply</button>
+    </form>
+
+    <!-- PRODUCTS -->
+    {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+                <div class="product-card">
+                    <div class="product-image">
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <span>No image</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">₹{{ product.price }}</div>
+
+                    <a href="{% url 'product_detail' product.slug %}">
+                        View product
+                    </a>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-{% else %}
-    <p>No products found.</p>
-{% endif %}
-
-</body>
-</html>
+    {% else %}
+        <div class="empty-state">
+            <p>No products found.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,28 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
+from django.db import transaction
+from django.db.models import F
 
 from apps.products.models import ProductVariant
-from .models import Order, OrderItem, Coupon, ReturnRequest
+from .models import Order, OrderItem, ReturnRequest
 from .forms import CheckoutForm
 from .utils import generate_invoice_pdf
 
 
 # =========================
-# CHECKOUT
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-
-from apps.products.models import ProductVariant
-from .models import Order, OrderItem
-from .forms import CheckoutForm
-
-
+# CHECKOUT (ATOMIC & SAFE)
+# =========================
 @login_required
+@transaction.atomic
 def checkout(request):
     cart = request.session.get('cart', {})
 
-    # ❗ Block checkout ONLY if cart is empty
     if not cart:
         return redirect('cart:cart_detail')
 
@@ -30,11 +25,13 @@ def checkout(request):
 
     if request.method == 'POST' and form.is_valid():
 
+        # Prevent double submit
+        if request.session.get('checkout_lock'):
+            return redirect('cart:cart_detail')
+        request.session['checkout_lock'] = True
+
         payment_method = form.cleaned_data['payment_method']
 
-        # ------------------------
-        # CREATE ORDER (INITIAL)
-        # ------------------------
         order = Order.objects.create(
             user=request.user,
             full_name=form.cleaned_data['full_name'],
@@ -45,18 +42,15 @@ def checkout(request):
             status='pending'
         )
 
-        # ------------------------
-        # CREATE ORDER ITEMS
-        # ------------------------
         for variant_id, item in cart.items():
-            variant = get_object_or_404(ProductVariant, id=variant_id)
+            variant = ProductVariant.objects.select_for_update().get(id=variant_id)
 
-            # ❌ Stock safety
             if variant.stock < item['quantity']:
+                transaction.set_rollback(True)
+                request.session['checkout_lock'] = False
                 return redirect('cart:cart_detail')
 
-            # Reduce stock
-            variant.stock -= item['quantity']
+            variant.stock = F('stock') - item['quantity']
             variant.save()
 
             OrderItem.objects.create(
@@ -66,69 +60,43 @@ def checkout(request):
                 price=item['price']
             )
 
-        # ------------------------
-        # CLEAR CART (AFTER ORDER CREATED)
-        # ------------------------
         request.session['cart'] = {}
         request.session.modified = True
+        request.session['checkout_lock'] = False
 
-        # ------------------------
-        # PAYMENT FLOW CONTROL
-        # ------------------------
         if payment_method == 'ONLINE':
             order.payment_status = 'PAYMENT UNDER REVIEW'
             order.save()
             return redirect('online_payment', order_id=order.id)
 
-        # COD FLOW
         return redirect('order_success', order_id=order.id)
 
-    # ------------------------
-    # GET REQUEST
-    # ------------------------
-    return render(request, 'customer/checkout.html', {
-        'form': form
-    })
+    return render(request, 'customer/checkout.html', {'form': form})
+
 
 # =========================
-# ONLINE PAYMENT PAGE
+# ONLINE PAYMENT (IDEMPOTENT)
 # =========================
-
 @login_required
 def online_payment(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
-    if request.method == 'POST':
-        order.payment_reference = request.POST.get('payment_reference')
-        order.payment_screenshot = request.FILES.get('payment_screenshot')
-        order.payment_status = 'PAYMENT UNDER REVIEW'
-        order.save()
-
+    if order.payment_status in ['PAID', 'PAYMENT UNDER REVIEW']:
         return redirect('my_orders')
 
-    return render(request, 'customer/online_payment.html', {
-        'order': order
-    })
-
-# =========================
-# CONFIRM PAYMENT
-
-@login_required
-def confirm_payment(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-
     if request.method == 'POST':
         order.payment_reference = request.POST.get('payment_reference')
         order.payment_screenshot = request.FILES.get('payment_screenshot')
         order.payment_status = 'PAYMENT UNDER REVIEW'
         order.save()
+        return redirect('my_orders')
 
-        return redirect('order_success', order_id=order.id)
+    return render(request, 'customer/online_payment.html', {'order': order})
+
 
 # =========================
 # ORDER SUCCESS
 # =========================
-
 @login_required
 def order_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -138,7 +106,6 @@ def order_success(request, order_id):
 # =========================
 # MY ORDERS
 # =========================
-
 @login_required
 def my_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
@@ -146,29 +113,34 @@ def my_orders(request):
 
 
 # =========================
-# CANCEL ORDER
+# CANCEL ORDER (SAFE)
 # =========================
-
 @login_required
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
-    if order.status in ['pending', 'packed']:
-        order.status = 'cancelled'
-        order.save()
+    if order.payment_status == 'PAID':
+        return redirect('my_orders')
 
+    if order.status not in ['pending', 'packed']:
+        return redirect('my_orders')
+
+    order.status = 'cancelled'
+    order.save()
     return redirect('my_orders')
 
 
 # =========================
-# RETURN ORDER
+# RETURN ORDER (ONCE ONLY)
 # =========================
-
 @login_required
 def request_return(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
-    if order.status != 'delivered' or hasattr(order, 'return_request'):
+    if order.status != 'delivered':
+        return redirect('my_orders')
+
+    if hasattr(order, 'return_request'):
         return redirect('my_orders')
 
     if request.method == 'POST':
@@ -186,13 +158,12 @@ def request_return(request, order_id):
 # =========================
 # INVOICE
 # =========================
-
 @login_required
 def download_invoice(request, order_id):
     order = get_object_or_404(Order, id=order_id)
 
-    if not request.user.is_staff and order.user != request.user:
-        return redirect('home')
+    if order.user != request.user and request.user.email != 'zila@admin.com':
+        return redirect('customer_home')
 
     pdf = generate_invoice_pdf(order)
 

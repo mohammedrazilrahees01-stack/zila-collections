@@ -1,50 +1,171 @@
-<h2>{{ product.name }}</h2>
+{% extends "base.html" %}
+{% load static %}
 
-<p>{{ product.description }}</p>
-<p><strong>Price:</strong> ₹{{ product.price }}</p>
+{% block content %}
+<style>
+    .product-page {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+    }
 
-{% if product.variants.exists %}
-<form method="post" action="{% url 'cart:add_to_cart_post' %}">
-    {% csrf_token %}
+    @media (max-width: 768px) {
+        .product-page {
+            grid-template-columns: 1fr;
+        }
+    }
 
-    <label><strong>Select Variant:</strong></label><br>
-    <select name="variant_id" required>
-        {% for variant in product.variants.all %}
-            {% if variant.stock > 0 %}
-                <option value="{{ variant.id }}">
-                    {{ variant.size }} / {{ variant.color }}
-                    (Stock: {{ variant.stock }})
-                </option>
-            {% endif %}
-        {% endfor %}
-    </select>
+    .product-image-box {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
 
-    <br><br>
+    .product-image-box img {
+        max-width: 100%;
+        max-height: 420px;
+        object-fit: contain;
+    }
 
-    <label><strong>Quantity:</strong></label><br>
-    <input type="number" name="quantity" value="1" min="1">
+    .product-info h1 {
+        font-size: 26px;
+        margin-bottom: 10px;
+    }
 
-    <br><br>
+    .product-price {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 15px 0;
+    }
 
-    <!-- ADD TO CART -->
-    <button type="submit">
-        Add to Cart
-    </button>
-</form>
+    .product-desc {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
 
-<br>
+    .product-form {
+        margin-top: 20px;
+    }
 
-<!-- BUY NOW -->
-<form method="post" action="{% url 'cart:buy_now' %}">
-    {% csrf_token %}
-    <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
-    <input type="hidden" name="quantity" value="1">
+    .product-form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
 
-    <button type="submit">
-        Buy Now
-    </button>
-</form>
+    .product-form select,
+    .product-form input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
 
-{% else %}
-<p>No variants available.</p>
-{% endif %}
+    .actions {
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+    }
+
+    .btn-cart {
+        flex: 1;
+        padding: 12px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .btn-buy {
+        flex: 1;
+        padding: 12px;
+        background: #F5B400;
+        color: #111;
+        border: none;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .no-variant {
+        color: #dc2626;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="product-page">
+    <!-- IMAGE -->
+    <div class="product-image-box">
+        {% if product.images.first %}
+            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+        {% else %}
+            <span>No image available</span>
+        {% endif %}
+    </div>
+
+    <!-- DETAILS -->
+    <div class="product-info">
+        <h1>{{ product.name }}</h1>
+
+        <div class="product-price">₹{{ product.price }}</div>
+
+        <div class="product-desc">
+            {{ product.description }}
+        </div>
+
+        {% if product.variants.exists %}
+        <!-- ADD TO CART FORM -->
+        <form method="post" action="{% url 'cart:add_to_cart_post' %}" class="product-form">
+            {% csrf_token %}
+
+            <label>Select Variant</label>
+            <select name="variant_id" required>
+                {% for variant in product.variants.all %}
+                    {% if variant.stock > 0 %}
+                        <option value="{{ variant.id }}">
+                            {{ variant.size }} / {{ variant.color }} (Stock: {{ variant.stock }})
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
+            <label>Quantity</label>
+            <input type="number" name="quantity" value="1" min="1">
+
+            <div class="actions">
+                <button type="submit" class="btn-cart">
+                    Add to Cart
+                </button>
+            </div>
+        </form>
+
+        <!-- BUY NOW -->
+        <form method="post" action="{% url 'cart:buy_now' %}" class="product-form">
+            {% csrf_token %}
+            <input type="hidden" name="variant_id" value="{{ product.variants.first.id }}">
+            <input type="hidden" name="quantity" value="1">
+
+            <button type="submit" class="btn-buy">
+                Buy Now
+            </button>
+        </form>
+
+        {% else %}
+            <div class="no-variant">
+                No variants available.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
